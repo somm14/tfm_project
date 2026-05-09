@@ -1,4 +1,4 @@
-"""
+'''
 limpieza_ecv.py
 ===============
 Script de limpieza y preparación de los microdatos ECV 2025 para el TFM.
@@ -17,42 +17,29 @@ Flujo:
  10. Exportación del dataset limpio
 
 Salida: data/ECV_2025/dataset_analitico.csv
-"""
+'''
 
 import re
 import pandas as pd
 import numpy as np
+
 from pathlib import Path
 
-# ─── RUTAS ────────────────────────────────────────────────────────────────────
-BASE          = Path(__file__).parent.parent
-PATH_DATOS    = BASE / 'data/ECV_2025'
-PATH_SALIDA   = PATH_DATOS / 'dataset_analitico.csv'
-
-# Códigos de valor perdido del INE → siempre se convierten a NaN al final
-NULOS_INE = [-1, -2, -4, -5, -6]
-
+from scripts.constants_var import *
+from utils.cleaning_utils import cargar_csv
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 1. CARGA
 # ══════════════════════════════════════════════════════════════════════════════
 
-def cargar(nombre: str) -> pd.DataFrame:
-    path = PATH_DATOS / nombre
-    for enc in ('utf-8', 'latin-1', 'cp1252'):
-        try:
-            return pd.read_csv(path, encoding=enc, low_memory=False)
-        except UnicodeDecodeError:
-            continue
-    raise ValueError(f"No se pudo leer {path}")
 
-print("Cargando ficheros...")
-df_d = cargar('01_datos_hogar.csv')       # Fichero D: datos básicos hogar
-df_h = cargar('02_detalles_hogar.csv')    # Fichero H: detalle hogar (renta, vivienda, bienestar)
-df_p = cargar('03_detalles_adulto.csv')   # Fichero P: datos adultos (trabajo, educación, salud, renta individual)
-df_r = cargar('04_datos_persona.csv')     # Fichero R: datos básicos persona (demográficos + vars derivadas)
+print('Cargando ficheros...')
+df_d = cargar_csv('01_datos_hogar.csv')       # Fichero D: datos básicos hogar
+df_h = cargar_csv('02_detalles_hogar.csv')    # Fichero H: detalle hogar (renta, vivienda, bienestar)
+df_p = cargar_csv('03_detalles_adulto.csv')   # Fichero P: datos adultos (trabajo, educación, salud, renta individual)
+df_r = cargar_csv('04_datos_persona.csv')     # Fichero R: datos básicos persona (demográficos + vars derivadas)
 
-print(f"  D: {df_d.shape} | H: {df_h.shape} | P: {df_p.shape} | R: {df_r.shape}")
+print(f'  D: {df_d.shape} | H: {df_h.shape} | P: {df_p.shape} | R: {df_r.shape}')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -71,7 +58,8 @@ df_persona['id_hogar_join'] = df_persona['RB030'].astype(int) // 100
 
 # Join hogar + persona
 df = df_hogar.merge(df_persona, left_on='DB030', right_on='id_hogar_join', how='inner')
-print(f"  Tras joins: {df.shape}")
+print(f'  Tras joins: {df.shape}')
+# Output -> Tras joins: (60825, 457)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -80,7 +68,7 @@ print(f"  Tras joins: {df.shape}")
 
 # Comunidad de Madrid
 df = df[df['DB040'].astype(str).str.strip() == 'ES30'].copy()
-print(f"  Tras filtro Madrid: {df.shape}")
+print(f'  Tras filtro Madrid: {df.shape}')
 
 # Asalariados activos: PL032 == 1 (trabajando) + PL040A == 3 (asalariado, empleo actual)
 # PL040A = situación profesional empleo ACTUAL (para quien trabaja)
@@ -90,7 +78,7 @@ df = df[
     (df['PL032'].astype(str).str.strip() == '1') &
     (df['PL040A'].astype(str).str.strip() == '3')
 ].copy()
-print(f"  Tras filtro asalariados: {df.shape}")
+print(f'  Tras filtro asalariados: {df.shape}')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -222,13 +210,13 @@ vars_seleccionadas = [
 # Mantener solo las que existen en el df
 vars_seleccionadas = [v for v in vars_seleccionadas if v in df.columns]
 df = df[vars_seleccionadas].copy()
-print(f"  Tras selección de variables: {df.shape}")
+print(f'  Tras selección de variables: {df.shape}')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 5. IMPUTACIÓN DE NULOS USANDO FLAGS _F DEL INE
-#    Flag = -1 → "No consta"  → NaN en la variable correspondiente
-#    Flag = -2 → "No aplicable" → NaN (caso no aplica según filtro de pregunta)
+#    Flag = -1 → 'No consta'  → NaN en la variable correspondiente
+#    Flag = -2 → 'No aplicable' → NaN (caso no aplica según filtro de pregunta)
 # ══════════════════════════════════════════════════════════════════════════════
 
 pares_flag = {
@@ -564,11 +552,11 @@ for col in cols_numericas:
 PATH_SALIDA.parent.mkdir(parents=True, exist_ok=True)
 df.to_csv(PATH_SALIDA, index=False, encoding='utf-8-sig')
 
-print(f"\n{'═'*60}")
-print(f"Dataset analítico guardado en: {PATH_SALIDA}")
-print(f"Filas: {len(df):,} | Columnas: {len(df.columns)}")
-print(f"\nColumnas finales:")
+print(f'\n{'═'*60}')
+print(f'Dataset analítico guardado en: {PATH_SALIDA}')
+print(f'Filas: {len(df):,} | Columnas: {len(df.columns)}')
+print(f'\nColumnas finales:')
 for col in df.columns:
     dtype = df[col].dtype
     nulls = df[col].isna().sum()
-    print(f"  {col:<40} {str(dtype):<10} nulos: {nulls:,}")
+    print(f'  {col:<40} {str(dtype):<10} nulos: {nulls:,}')
