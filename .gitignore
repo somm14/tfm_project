@@ -1,1 +1,6 @@
 src/data/mapeo/*.csv
+.venv/
+__pycache__/
+*.py[oc]
+build/
+dist/
