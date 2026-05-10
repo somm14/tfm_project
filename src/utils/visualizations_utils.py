@@ -65,7 +65,7 @@ def diagram_relationship():
 def urban_grade_CCMM(data):
     fig, ax = plt.subplots(figsize=(7, 3.5))
     bars = ax.barh(data.index, data.values, color=PALETTE[:3])
-    ax.bar_label(bars, fmt='%d', padding=4, fontsize=9)
+    ax.bar_label(bars, fmt='%d%%', padding=4, fontsize=9)
     ax.set_xlabel('Número de personas')
     ax.set_title('Grado de urbanización en la muestra de Madrid\n'
                 '(todos los residentes, antes de filtrar asalariados)', fontweight='bold')
@@ -74,3 +74,34 @@ def urban_grade_CCMM(data):
     plt.savefig('./img/silver_data_urbanizacion.png', bbox_inches='tight')
     plt.show()
     print("-> La Comunidad de Madrid es eminentemente urbana: el 81% reside en zonas muy pobladas.")
+
+def PL032_vs_PL040A(df):
+    activ_map = {
+    '1': 'Trabajando', '2': 'Parado', '3': 'Jubilado',
+    '4': 'Incapacitado', '5': 'Estudiante', '6': 'Labores hogar', '8': 'Otro inactivo'
+    }
+    pl032_vc = df['PL032'].astype(str).str.strip().map(activ_map).value_counts(normalize=True) * 100
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    # Gráfico 1: Situación de actividad
+    bars1 = axes[0].barh(pl032_vc.index, pl032_vc.values, color=PALETTE)
+    axes[0].bar_label(bars1, fmt='%.2f%%', padding=3, fontsize=8)
+    axes[0].set_xlabel('Personas')
+    axes[0].set_title('PL032 - Situación de actividad\n(muestra Madrid, N=6.035)', fontweight='bold')
+    axes[0].set_xlim(0, pl032_vc.max() * 1.2)
+
+    # Gráfico 2: Situación profesional entre quienes trabajan
+    df_trab = df[df['PL032'].astype(str).str.strip() == '1']
+    prof_map = {'1': 'Empleador', '2': 'Autónomo', '3': 'Asalariado', '4': 'Ayuda familiar'}
+    prof_vc = df_trab['PL040A'].astype(str).str.strip().map(prof_map).value_counts(normalize=True) * 100
+    prof_vc = prof_vc[prof_vc.index.notna()]
+    bars2 = axes[1].bar(prof_vc.index, prof_vc.values,
+                        color=['#C73E1D' if k=='Asalariado' else '#ccc' for k in prof_vc.index])
+    axes[1].bar_label(bars2, fmt='%.2f%%', padding=3, fontsize=8)
+    axes[1].set_ylabel('Personas')
+    axes[1].set_title('PL040A - Situación profesional\n(solo quienes trabajan: PL032=1)', fontweight='bold')
+
+    plt.tight_layout()
+    plt.savefig('./img/silver_filtros_laborales.png', bbox_inches='tight')
+    plt.show()

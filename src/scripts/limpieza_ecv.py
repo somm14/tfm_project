@@ -69,16 +69,18 @@ print(f'  Tras joins: {df.shape}')
 # Comunidad de Madrid
 df = df[df['DB040'].astype(str).str.strip() == 'ES30'].copy()
 print(f'  Tras filtro Madrid: {df.shape}')
+# Output -> Tras filtro Madrid: (6035, 457)
+
 
 # Asalariados activos: PL032 == 1 (trabajando) + PL040A == 3 (asalariado, empleo actual)
 # PL040A = situación profesional empleo ACTUAL (para quien trabaja)
-# PL040B = situación profesional ÚLTIMO empleo (para quien ya no trabaja → no aplica aquí)
 # Las columnas vienen como string en los CSVs originales del INE
 df = df[
     (df['PL032'].astype(str).str.strip() == '1') &
     (df['PL040A'].astype(str).str.strip() == '3')
 ].copy()
 print(f'  Tras filtro asalariados: {df.shape}')
+# Output -> Tras filtro asalariados: (2947, 457)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -203,14 +205,14 @@ vars_seleccionadas = [
     'HS120_F',    'HS040_F',  'HS050_F',  'HS090_F',  'HS150_F',
     'HD080_F',    'HH010_F',  'HH021_F',  'HH030_F',  'HH050_F',
     'HH060_F',    'HH070_F',  'HI010_F',  'HI040_F',  'cuotahip_F',
-    'HS200_F',    'HS210_F',  'HS220_F',
     'DB040_F',    'DB100_F',
 ]
 
 # Mantener solo las que existen en el df
 vars_seleccionadas = [v for v in vars_seleccionadas if v in df.columns]
 df = df[vars_seleccionadas].copy()
-print(f'  Tras selección de variables: {df.shape}')
+print(f'\tTras selección de variables: {df.shape}')
+# Output -> Tras selección de variables: (2947, 89)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
