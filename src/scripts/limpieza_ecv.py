@@ -201,18 +201,16 @@ vars_seleccionadas = [
     # ── FLAGS _F NECESARIOS PARA IMPUTACIÓN (se eliminan al final) ────────────
     'HB070_F',    # Flag informante
     'HB100_F',    # Flag minutos cuestionario
-    'HS011_F',    'HS021_F',  'HS031_F',  'HS060_F',  'HS110_F',
-    'HS120_F',    'HS040_F',  'HS050_F',  'HS090_F',  'HS150_F',
-    'HD080_F',    'HH010_F',  'HH021_F',  'HH030_F',  'HH050_F',
-    'HH060_F',    'HH070_F',  'HI010_F',  'HI040_F',  'cuotahip_F',
-    'DB040_F',    'DB100_F',
+    'HS011_F', 'HS200_F', 'HS210_F',    'HS220_F', 'HS021_F', 'HS031_F',
+    'HS150_F', 'HH060_F', 'cuotahip_F', 'HI020_F', 'PL060_F', 'PL271_F',
+    'PH040_F', 'HI030_F', 'HS200_F',    'HS210_F', 'HS220_F'
 ]
 
 # Mantener solo las que existen en el df
 vars_seleccionadas = [v for v in vars_seleccionadas if v in df.columns]
 df = df[vars_seleccionadas].copy()
 print(f'\tTras selección de variables: {df.shape}')
-# Output -> Tras selección de variables: (2947, 89)
+# Output -> Tras selección de variables: (2947, 81)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
