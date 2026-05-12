@@ -7,8 +7,6 @@ sns.set_palette(PALETTE)
 
 # Rutas 
 DATA_DIR_BRONZE  = Path('data/01_bronze/')
+DATA_DIR_SILVER  = Path('data/02_silver/')
 INFO_DIR  = DATA_DIR_BRONZE / 'info'
-PATH_OUT  = DATA_DIR_BRONZE / 'dataset_analitico.csv'
-
-# Códigos de valor perdido del INE
-NULOS_INE = [-1, -2, -4, -5, -6]
+PATH_OUT  = DATA_DIR_SILVER / 'dataset_analitico.csv'

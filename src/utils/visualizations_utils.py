@@ -105,3 +105,73 @@ def PL032_vs_PL040A(df):
     plt.tight_layout()
     plt.savefig('./img/silver_filtros_laborales.png', bbox_inches='tight')
     plt.show()
+
+def dis_target_descod(df):
+    target_cols = ['capacidad_fin_de_mes', 'capacidad_gastos_imprevistos',
+               'retrasos_facturas', 'retrasos_hipoteca_alquiler', 'retrasos_deudas_no_vivienda']
+
+    orden_fin_mes = ['Con mucha dificultad', 'Con dificultad', 'Con cierta dificultad',
+                    'Con cierta facilidad', 'Con facilidad', 'Con mucha facilidad']
+
+    fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+    fig.suptitle('Componentes del estrés financiero — distribución tras decodificación\n'
+                f'(asalariados de Madrid, N={len(df)})', fontweight='bold', fontsize=13, y=1.01)
+    axes = axes.flatten()
+
+    colores_stress = {
+        'Con mucha dificultad': '#C73E1D', 'Con dificultad': '#F18F01',
+        'Con cierta dificultad': '#F5C842',
+        'Con cierta facilidad': '#8CBB6E', 'Con facilidad': '#4A9B6E',
+        'Con mucha facilidad': '#2E7D52',
+        'No (no puede)': '#C73E1D', 'No (otra razón)': '#F18F01', 'Sí': '#2E7D52',
+        'Sí, una vez': '#F18F01', 'Sí, dos o más veces': '#C73E1D', 'No': '#2E7D52',
+    }
+
+    for i, col in enumerate(target_cols):
+        ax = axes[i]
+        vc = df[col].value_counts(dropna=False)
+        if col == 'capacidad_fin_de_mes':
+            cats_orden = [c for c in orden_fin_mes if c in vc.index]
+            vc = vc[cats_orden]
+        colors_bar = [colores_stress.get(str(k), '#999') for k in vc.index]
+        bars = ax.barh([str(k) for k in vc.index], vc.values, color=colors_bar)
+        ax.bar_label(bars, fmt='%d', padding=3, fontsize=8)
+        pct_nulos = df[col].isna().sum() / len(df) * 100
+        titulo = col.replace('_', '\n')
+        ax.set_title(f'{titulo}\n({pct_nulos:.2f}% NaN)', fontsize=9, fontweight='bold')
+        ax.set_xlabel('n personas')
+        ax.set_xlim(0, vc.max() * 1.25)
+
+    axes[5].axis('off')
+    plt.tight_layout()
+    plt.savefig('./img/silver_target_distribucion.png', bbox_inches='tight')
+    plt.show()
+
+
+def dis_bar_nuls(df):
+    null_pct = df.isnull().mean() * 100
+    null_pct = null_pct[null_pct > 0].sort_values(ascending=False)
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    colors_bar = ['#C73E1D' if v > 50 else '#F18F01' if v > 20 else '#2E86AB' for v in null_pct.values]
+    bars = ax.bar(range(len(null_pct)), null_pct.values, color=colors_bar, width=0.7)
+    ax.set_xticks(range(len(null_pct)))
+    ax.set_xticklabels(null_pct.index, rotation=45, ha='right', fontsize=8)
+    ax.axhline(50, color='#C73E1D', linestyle='--', alpha=0.6, label='50%')
+    ax.axhline(20, color='#F18F01', linestyle='--', alpha=0.6, label='20%')
+    ax.set_ylabel('% de valores nulos')
+    ax.set_title('Porcentaje de nulos por variable — dataset analítico Silver\n'
+                '(solo variables con algún nulo; nulos estructurales incluidos)', fontweight='bold')
+    ax.legend(fontsize=9)
+    ax.set_ylim(0, 105)
+
+    for i, (col, pct) in enumerate(zip(null_pct.index, null_pct.values)):
+        if pct > 5:
+            ax.text(i, pct + 1.5, f'{pct:.0f}%', ha='center', fontsize=6.5, rotation=90)
+
+    plt.tight_layout()
+    plt.savefig('./img/silver_mapa_nulos.png', bbox_inches='tight')
+    plt.show()
+
+    print("\nNota: los nulos más elevados (HI030, HI020) son ESTRUCTURALES.")
+    print("No responden a errores de datos sino a que la pregunta no aplica al perfil del encuestado.")

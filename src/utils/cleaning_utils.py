@@ -1,6 +1,6 @@
 import pandas as pd
 
-from scripts.constants_var import DATA_DIR_BRONZE
+from src.scripts.constants_var import DATA_DIR_BRONZE
 
 def cargar_csv(nombre: str) -> pd.DataFrame:
     '''Carga un CSV probando encodings comunes del INE.'''
