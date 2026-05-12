@@ -1,6 +1,10 @@
+from src.scripts.limpieza_ecv import run as run_limpieza
 def main():
-    print("Hello from tfm-project!")
+    print("Inicio pipeline\n")
 
+    run_limpieza()
+
+    print("\nPipeline finalizado")
 
 if __name__ == "__main__":
     main()
