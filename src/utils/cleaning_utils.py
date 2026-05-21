@@ -1,6 +1,10 @@
 import pandas as pd
+import os
+from pathlib import Path
+os.chdir(Path(__file__).resolve().parent.parent.parent)
 
 from src.utils.constants_var import DATA_DIR_BRONZE
+
 
 def cargar_csv(nombre: str) -> pd.DataFrame:
     '''Carga un CSV probando encodings comunes del INE.'''

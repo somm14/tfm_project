@@ -1,8 +1,13 @@
+import os
+
 import matplotlib.pyplot as plt
 
 from matplotlib.patches import FancyBboxPatch
 
 from utils.constants_var import PALETTE
+
+from pathlib import Path
+os.chdir(Path(__file__).resolve().parent.parent.parent)
 
 
 def nuls_space_dis(df, target):
@@ -59,7 +64,7 @@ def diagram_relationship():
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
     ax.set_title('Estructura de ficheros ECV 2025 y relaciones de join', fontweight='bold', pad=10)
     plt.tight_layout()
-    plt.savefig('./img/bronze_diagrama_ficheros.png', bbox_inches='tight')
+    plt.savefig('./src/img/bronze_diagrama_ficheros.png', bbox_inches='tight')
     plt.show()
 
 def urban_grade_CCMM(data):
@@ -71,7 +76,7 @@ def urban_grade_CCMM(data):
                 '(todos los residentes, antes de filtrar asalariados)', fontweight='bold')
     ax.set_xlim(0, data.max() * 1.15)
     plt.tight_layout()
-    plt.savefig('./img/silver_data_urbanizacion.png', bbox_inches='tight')
+    plt.savefig('./src/img/silver_data_urbanizacion.png', bbox_inches='tight')
     plt.show()
     print("-> La Comunidad de Madrid es eminentemente urbana: el 81% reside en zonas muy pobladas.")
 
@@ -103,7 +108,7 @@ def PL032_vs_PL040A(df):
     axes[1].set_title('PL040A - Situación profesional\n(solo quienes trabajan: PL032=1)', fontweight='bold')
 
     plt.tight_layout()
-    plt.savefig('./img/silver_filtros_laborales.png', bbox_inches='tight')
+    plt.savefig('./src/img/silver_filtros_laborales.png', bbox_inches='tight')
     plt.show()
 
 def dis_target_descod(df):
@@ -144,7 +149,7 @@ def dis_target_descod(df):
 
     axes[5].axis('off')
     plt.tight_layout()
-    plt.savefig('./img/silver_target_distribucion.png', bbox_inches='tight')
+    plt.savefig('./src/img/silver_target_distribucion.png', bbox_inches='tight')
     plt.show()
 
 
@@ -170,7 +175,7 @@ def dis_bar_nuls(df):
             ax.text(i, pct + 1.5, f'{pct:.0f}%', ha='center', fontsize=6.5, rotation=90)
 
     plt.tight_layout()
-    plt.savefig('./img/silver_mapa_nulos.png', bbox_inches='tight')
+    plt.savefig('./src/img/silver_mapa_nulos.png', bbox_inches='tight')
     plt.show()
 
     print("\nNota: los nulos más elevados (HI030, HI020) son ESTRUCTURALES.")
