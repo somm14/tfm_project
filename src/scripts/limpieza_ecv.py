@@ -25,7 +25,7 @@ import numpy as np
 
 from pathlib import Path
 
-from src.scripts.constants_var import *
+from src.utils.constants_var import *
 from src.utils.cleaning_utils import cargar_csv
 from src.utils.mapeo_utils import *
 
@@ -198,11 +198,9 @@ def run():
 
     # Convertir a numérico las variables continuas que vienen como string
     cols_numericas_str = [
-        'horas_semana', 'anios_experiencia', 'meses_desempleo_ref', 'meses_desempleo_5anios',
-        'renta_neta_salarial', 'renta_no_monetaria_salarial',
-        'renta_neta_hogar', 'renta_hogar_indicadores', 'unidades_consumo',
-        'num_miembros_hogar', 'importe_alquiler', 'gastos_vivienda', 'cuota_hipoteca',
-        'ocupacion_isco08', 'num_habitaciones',
+    'horas_semana', 'anios_experiencia', 'meses_desempleo_ref', 
+    # 'meses_desempleo_5anios','renta_neta_salarial', 'renta_no_monetaria_salarial', 'renta_neta_hogar', 'renta_hogar_indicadores', 'unidades_consumo', 'num_miembros_hogar', 'importe_alquiler', 'cuota_hipoteca',
+    'ocupacion_isco08', 'num_habitaciones', 'gastos_vivienda'
     ]
     for col in cols_numericas_str:
         if col in df.columns:
