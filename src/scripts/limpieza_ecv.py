@@ -19,11 +19,11 @@ Flujo:
 Salida: data/ECV_2025/dataset_analitico.csv
 '''
 
-import re
+# import re
 import pandas as pd
 import numpy as np
 
-from pathlib import Path
+# from pathlib import Path
 
 from src.utils.constants_var import *
 from src.utils.cleaning_utils import cargar_csv
