@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.patches import FancyBboxPatch
 
-from scripts.constants_var import PALETTE
+from utils.constants_var import PALETTE
 
 
 def nuls_space_dis(df, target):
