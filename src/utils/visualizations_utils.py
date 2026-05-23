@@ -9,6 +9,16 @@ from utils.constants_var import PALETTE
 from pathlib import Path
 os.chdir(Path(__file__).resolve().parent.parent.parent)
 
+plt.rcParams.update({
+    'figure.dpi': 120,
+    'axes.spines.top': False,
+    'axes.spines.right': False,
+    'axes.titlesize': 12,
+    'axes.labelsize': 10,
+    'font.family': 'sans-serif',
+})
+
+
 
 def nuls_space_dis(df, target):
     fig, axes = plt.subplots(1, 5, figsize=(15, 4))
@@ -29,6 +39,7 @@ def nuls_space_dis(df, target):
     plt.tight_layout()
     plt.show()
     print('Nota: las barras rojas representan valores faltantes según el INE (cadena vacía).')
+
 
 
 def diagram_relationship():
@@ -67,6 +78,8 @@ def diagram_relationship():
     plt.savefig('./src/img/bronze_diagrama_ficheros.png', bbox_inches='tight')
     plt.show()
 
+
+
 def urban_grade_CCMM(data):
     fig, ax = plt.subplots(figsize=(7, 3.5))
     bars = ax.barh(data.index, data.values, color=PALETTE[:3])
@@ -79,6 +92,8 @@ def urban_grade_CCMM(data):
     plt.savefig('./src/img/silver_data_urbanizacion.png', bbox_inches='tight')
     plt.show()
     print("-> La Comunidad de Madrid es eminentemente urbana: el 81% reside en zonas muy pobladas.")
+
+
 
 def PL032_vs_PL040A(df):
     activ_map = {
@@ -110,6 +125,8 @@ def PL032_vs_PL040A(df):
     plt.tight_layout()
     plt.savefig('./src/img/silver_filtros_laborales.png', bbox_inches='tight')
     plt.show()
+
+
 
 def dis_target_descod(df):
     target_cols = ['capacidad_fin_de_mes', 'capacidad_gastos_imprevistos',
@@ -153,6 +170,7 @@ def dis_target_descod(df):
     plt.show()
 
 
+
 def dis_bar_nuls(df):
     null_pct = df.isnull().mean() * 100
     null_pct = null_pct[null_pct > 0].sort_values(ascending=False)
@@ -180,3 +198,34 @@ def dis_bar_nuls(df):
 
     print("\nNota: los nulos más elevados (HI030, HI020) son ESTRUCTURALES.")
     print("No responden a errores de datos sino a que la pregunta no aplica al perfil del encuestado.")
+
+
+
+def distribucion_target(y_train, y_test):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    for ax, (nombre, y_ser) in zip(axes, [('Train', y_train), ('Test', y_test)]):
+        vc = y_ser.value_counts().sort_index()
+        bars = ax.bar(['0 - Sin estrés', '1 - Estrés alto'],
+                    vc.values,
+                    color=['#2E86AB', '#C73E1D'],
+                    width=0.5, edgecolor='white')
+        ax.bar_label(bars, fmt='%d', padding=4, fontsize=10)
+        for i, (val, n) in enumerate(zip(vc.index, vc.values)):
+            ax.text(i, n / 2, f'{n/len(y_ser)*100:.1f}%', ha='center', va='center',
+                    color='white', fontsize=11, fontweight='bold')
+        ax.set_title(f'{nombre}  (n={len(y_ser):,})', fontweight='bold')
+        ax.set_ylabel('Personas')
+        ax.set_ylim(0, vc.max() * 1.15)
+
+    fig.suptitle('Distribución del target tras stratify - la proporción 84/16% se mantiene',
+                fontweight='bold', y=1.01)
+    plt.tight_layout()
+    plt.savefig('src/img/gold_split_target.png', bbox_inches='tight')
+    plt.show()
+
+    # Verificación cuantitativa de la estratificación
+    ratio_train = (y_train == 1).mean()
+    ratio_test  = (y_test  == 1).mean()
+    print(f'Ratio clase 1 - Train: {ratio_train:.4f}  |  Test: {ratio_test:.4f}')
+    print(f'Diferencia absoluta:   {abs(ratio_train - ratio_test):.4f}  (debe ser < 0.005)')
