@@ -9,7 +9,15 @@ sns.set_palette(PALETTE)
 _ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Rutas absolutas ancladas a la ubicación del archivo
-DATA_DIR_BRONZE  = _ROOT / 'src/data/01_bronze'
-DATA_DIR_SILVER  = _ROOT / 'src/data/02_silver'
-INFO_DIR  = DATA_DIR_BRONZE / 'info'
-PATH_OUT  = DATA_DIR_SILVER / 'dataset_analitico.csv'
+DATA_DIR_BRONZE = _ROOT / 'src/data/01_bronze'
+DATA_DIR_SILVER = _ROOT / 'src/data/02_silver'
+DATA_DIR_GOLD = _ROOT / 'src/data/03_gold'
+
+INFO_DIR = DATA_DIR_BRONZE / 'info'
+PATH_SILVER_ANALITICO = DATA_DIR_SILVER / 'dataset_analitico.csv'
+PATH_GOLD_MODELADO = DATA_DIR_GOLD / 'dataset_modelado.csv'
+PATH_GOLD_SPLIT_RAW = DATA_DIR_GOLD / 'raw/'
+
+
+# Constantes para el dataset de modelado
+COLS_AUX = ['estres_financiero_alto', 'peso_persona']

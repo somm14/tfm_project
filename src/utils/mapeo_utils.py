@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# VARIABLES SELECCIONADAS PARA EL DATASET ANTES DE DESCODIFICARLAS
+# ----------------------------------------------------------------
 VARS_SELECCIONADAS = [
 
     # ── IDENTIFICADORES (necesarios para joins y trazabilidad) ────────────────
@@ -110,6 +113,10 @@ VARS_SELECCIONADAS = [
     'PH040_F', 'HI030_F', 'HS200_F',    'HS210_F', 'HS220_F'
 ]
 
+# ----------------------------------------------------------------
+# DESCODIFICACIÓN DEL NOMBRE DE LAS COLUMNAS
+# ----------------------------------------------------------------
+
 RENAME_MAP = {
     # Identificadores
     'DB030':          'id_hogar',
@@ -205,6 +212,10 @@ RENAME_MAP = {
     'vrMATSOCDEP':    'carencia_material_social_severa',
     'vrEU2030_nuevo': 'arope_2030',
 }
+
+# ----------------------------------------------------------------
+# DESCODIFICACIONES DE LOS VALORES
+# ----------------------------------------------------------------
 
 DECODIFICACIONES = {
 
@@ -354,4 +365,16 @@ DECODIFICACIONES = {
     'arope_2020':                      {'0': 'No', '1': 'Sí'},
     'carencia_material_social_severa': {'0': 'No', '1': 'Sí'},
     'arope_2030':                      {'0': 'No', '1': 'Sí'},
+}
+
+# ----------------------------------------------------------------
+# COMPONENTES DEL TARGET ESTRÉS FINANCIERO
+# ----------------------------------------------------------------
+
+COMPONENTES_ESTRES = {
+    'capacidad_fin_de_mes':         ['Con mucha dificultad', 'Con dificultad'],
+    'capacidad_gastos_imprevistos': ['No (no puede)'],
+    'retrasos_facturas':            ['Sí, una vez', 'Sí, dos o más veces'],
+    'retrasos_hipoteca_alquiler':   ['Sí, una vez', 'Sí, dos o más veces'],
+    'retrasos_deudas_no_vivienda':  ['Sí, una vez', 'Sí, dos o más veces'],
 }
