@@ -11,7 +11,7 @@ Flujo
   PASO 3  *** TRAIN / TEST SPLIT *** ← primera operación sobre los datos
             train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
   PASO 4  Eliminación de constantes, IDs, leakage y duplicadas
-  PASO 5  Feature engineering (determinista — sin ajuste sobre datos)
+  PASO 5  Feature engineering (determinista - sin ajuste sobre datos)
             · renta_hogar_per_capita
             · ratio_carga_vivienda
             · precariedad_laboral
@@ -41,28 +41,19 @@ Salida del script → data/03_gold/
 import math
 import numpy as np
 import pandas as pd
+import os
 from pathlib import Path
+os.chdir(Path(__file__).resolve().parent.parent.parent)
+
 from sklearn.model_selection import train_test_split
 
-# ─────────────────────────────────────────────────────────────────────────────
-# RUTAS
-# ─────────────────────────────────────────────────────────────────────────────
+from src.utils.constants_var import PATH_SILVER_ANALITICO, COLS_AUX, PATH_GOLD_SPLIT_RAW
+from src.utils.mapeo_utils import COMPONENTES_ESTRES
 
-PATH_SILVER = Path('data/02_silver/dataset_analitico.csv')
-PATH_GOLD   = Path('data/03_gold/dataset_modelado.csv')
-PATH_GOLD_DIR = Path('data/03_gold')
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTES
 # ─────────────────────────────────────────────────────────────────────────────
-
-COMPONENTES_ESTRES = {
-    'capacidad_fin_de_mes':         ['Con mucha dificultad', 'Con dificultad'],
-    'capacidad_gastos_imprevistos': ['No (no puede)'],
-    'retrasos_facturas':            ['Sí, una vez', 'Sí, dos o más veces'],
-    'retrasos_hipoteca_alquiler':   ['Sí, una vez', 'Sí, dos o más veces'],
-    'retrasos_deudas_no_vivienda':  ['Sí, una vez', 'Sí, dos o más veces'],
-}
 
 COLS_CONSTANTES  = ['region', 'situacion_actividad', 'situacion_profesional']
 COLS_IDS         = ['id_hogar', 'id_persona']
@@ -127,23 +118,24 @@ MAPA_BINARIO = {
 def construir_target(df: pd.DataFrame) -> pd.DataFrame:
     '''
     Construye estres_financiero_alto (binario, ≥2 de 5 condiciones).
-    NaN cuando el score es indeterminable (< 4 componentes disponibles y score < 2).
+    NaN cuando el score_comp es indeterminable (< 4 componentes disponibles y score_comp < 2).
     '''
     for col, vals in COMPONENTES_ESTRES.items():
         df[f'_comp_{col}'] = df[col].isin(vals).astype('Int64')
 
     comp_cols = [f'_comp_{c}' for c in COMPONENTES_ESTRES]
-    score    = df[comp_cols].sum(axis=1, skipna=True)
-    n_disp   = df[comp_cols].notna().sum(axis=1)
+    score_comp = df[comp_cols].sum(axis=1, skipna=True)
+    not_nulls = df[comp_cols].notna().sum(axis=1)
 
     df['estres_financiero_alto'] = np.where(
-        score >= 2, 1,
-        np.where((score < 2) & (n_disp >= 4), 0, np.nan)
-    ).astype('Int64')
+        score_comp >= 2, 1,
+        np.where((score_comp < 2) & (not_nulls >= 4), 0, np.nan)
+    ).astype(int)
 
     df = df.drop(columns=comp_cols)
     return df
 
+# ----> Voy por aquí
 
 def eliminar_columnas(df: pd.DataFrame) -> pd.DataFrame:
     '''Elimina constantes, IDs, variables con leakage y duplicadas.'''
@@ -242,7 +234,7 @@ def exportar_splits(
     print(f'  X_train.csv  {X_train.shape}  |  X_test.csv  {X_test.shape}')
     print(f'  y_train.csv  {y_train.shape}  |  y_test.csv  {y_test.shape}')
 
-    # Peso muestral (auxiliar — no es feature)
+    # Peso muestral (auxiliar - no es feature)
     if 'peso_persona' in df.columns:
         df.loc[X_train.index, 'peso_persona'].to_csv(
             PATH_GOLD_DIR / 'peso_train.csv', index=False, header=True
@@ -260,54 +252,45 @@ def exportar_splits(
 def run() -> None:
     sep = '═' * 62
 
-    # ── PASO 0: Carga ─────────────────────────────────────────────────────────
+    # PASO 0: Carga
     print(f'\n{sep}')
-    print('PASO 0 — Carga del dataset Silver')
+    print('PASO 0 - Carga del dataset Silver')
     print(sep)
-    df = pd.read_csv(PATH_SILVER, low_memory=False)
+    df = pd.read_csv(PATH_SILVER_ANALITICO, low_memory=False)
     print(f'  {df.shape[0]:,} filas × {df.shape[1]} columnas')
 
-    # ── PASO 1: Construir target ───────────────────────────────────────────────
+    # PASO 1: Construir target
     print(f'\n{sep}')
-    print('PASO 1 — Construcción del target estres_financiero_alto')
+    print('PASO 1 - Construcción del target estres_financiero_alto')
     print(sep)
     df = construir_target(df)
-    n0  = (df['estres_financiero_alto'] == 0).sum()
-    n1  = (df['estres_financiero_alto'] == 1).sum()
-    nan = df['estres_financiero_alto'].isna().sum()
-    print(f'  0 — sin estrés: {n0:,}  ({n0/len(df)*100:.1f}%)')
-    print(f'  1 — estrés alto:{n1:,}  ({n1/len(df)*100:.1f}%)')
-    print(f'  NaN (indet.):   {nan:,}  → se eliminan antes del split')
 
-    # ── PASO 2: Eliminar NaN del target ───────────────────────────────────────
-    df = df.dropna(subset=['estres_financiero_alto']).copy()
-    print(f'  Filas tras eliminar NaN target: {len(df):,}')
-
-    # ── PASO 3: TRAIN / TEST SPLIT ────────────────────────────────────────────
-    # PRIMERA OPERACIÓN QUE DIVIDE LOS DATOS.
-    # Todo lo que aprende parámetros de los datos (imputación estadística,
-    # OHE, StandardScaler) se ejecuta DESPUÉS y solo sobre X_train.
+    # PASO 3: TRAIN / TEST SPLIT
     print(f'\n{sep}')
-    print('PASO 3 — TRAIN / TEST SPLIT  ← primera operación sobre los datos')
+    print('PASO 3 - TRAIN / TEST SPLIT')
     print(sep)
 
-    COLS_AUX = ['estres_financiero_alto', 'peso_persona']
     X_raw = df.drop(columns=[c for c in COLS_AUX if c in df.columns])
     y_raw = df['estres_financiero_alto'].astype(int)
 
-    X_train_idx, X_test_idx, y_train, y_test = train_test_split(
+    X_train, X_test, y_train, y_test = train_test_split(
         X_raw, y_raw,
         test_size=0.20,
         random_state=42,
         stratify=y_raw,
     )
 
-    idx_train = X_train_idx.index
-    idx_test  = X_test_idx.index
+    train_set = X_train
+    train_set['estres_financiero_alto'] = y_train
 
-    print(f'  Train: {len(idx_train):,}  ({len(idx_train)/len(df)*100:.1f}%)')
-    print(f'  Test:  {len(idx_test):,}  ({len(idx_test)/len(df)*100:.1f}%)')
-    print(f'  Clase 1 en train: {(y_train==1).mean()*100:.1f}%  |  en test: {(y_test==1).mean()*100:.1f}%')
+    test_set = X_test
+    test_set['estres_financiero_alto'] = y_test
+
+    train_set.to_csv(PATH_GOLD_SPLIT_RAW + 'train_set.csv', index=False)
+    test_set.to_csv(PATH_GOLD_SPLIT_RAW + 'test_set.csv', index=False)
+
+# ----> Voy por aquí
+
 
     # ── PASOS 4–8: Transformaciones deterministas (sobre df completo) ──────────
     # Aunque las transformaciones se aplican al dataset completo, son seguras
@@ -318,14 +301,14 @@ def run() -> None:
     # El split de índices ya está fijado; X_train / X_test se extraen al final.
 
     print(f'\n{sep}')
-    print('PASO 4 — Eliminación de columnas')
+    print('PASO 4 - Eliminación de columnas')
     print(sep)
     n_antes = df.shape[1]
     df = eliminar_columnas(df)
     print(f'  Eliminadas: {n_antes - df.shape[1]} columnas  |  Restantes: {df.shape[1]}')
 
     print(f'\n{sep}')
-    print('PASO 5 — Feature engineering')
+    print('PASO 5 - Feature engineering')
     print(sep)
     df = feature_engineering(df)
     cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral'] \
@@ -335,7 +318,7 @@ def run() -> None:
         print(f'    + {c}')
 
     print(f'\n{sep}')
-    print('PASO 6 — Imputación semántica')
+    print('PASO 6 - Imputación semántica')
     print(sep)
     df = imputacion_semantica(df)
     print('  motivo_aumento_ingresos     → NaN imputados como "No aplica (sin aumento)"')
@@ -343,7 +326,7 @@ def run() -> None:
     print('  expectativa_sin_respuesta   → indicador binario creado')
 
     print(f'\n{sep}')
-    print('PASO 7 — Encoding ordinal (mapa fijo)')
+    print('PASO 7 - Encoding ordinal (mapa fijo)')
     print(sep)
     df = encoding_fijo(df)
     print(f'  Ordinal: {len(ENCODING_ORDINAL)} variables  |  Binario: {len(COLS_BINARIAS)} variables')
@@ -358,7 +341,7 @@ def run() -> None:
 
     # ── PASO 9: Exportación ────────────────────────────────────────────────────
     print(f'\n{sep}')
-    print('PASO 9 — Exportación')
+    print('PASO 9 - Exportación')
     print(sep)
     exportar_splits(df, X_train, X_test, y_train, y_test)
 
@@ -368,7 +351,7 @@ def run() -> None:
     cols_cat = X_features.select_dtypes(include='object').columns
 
     print(f'\n{sep}')
-    print('RESUMEN FINAL — DATASET GOLD')
+    print('RESUMEN FINAL - DATASET GOLD')
     print(sep)
     print(f'  Observaciones:                {len(df):,}')
     print(f'  Features numéricas/ord/bin:  {len(cols_num)}')
