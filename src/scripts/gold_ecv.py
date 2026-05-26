@@ -47,8 +47,8 @@ os.chdir(Path(__file__).resolve().parent.parent.parent)
 
 from sklearn.model_selection import train_test_split
 
-from src.utils.constants_var import PATH_SILVER_ANALITICO, COLS_AUX, PATH_GOLD_SPLIT_RAW
-from src.utils.mapeo_utils import COMPONENTES_ESTRES
+from src.utils.constants_var import PATH_SILVER_ANALITICO, COLS_AUX, PATH_GOLD_SPLIT_RAW, COLS_BINARIAS
+from src.utils.mapeo_utils import COMPONENTES_ESTRES, MAPA_ESTUDIOS, ENCODING_ORDINAL, MAPA_BINARIO
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -69,47 +69,6 @@ COLS_LOG1P = [
     'cuota_hipoteca',
     'gastos_vivienda',
 ]
-
-MAPA_ESTUDIOS = {
-    'Sin estudios':                 'Hasta primaria',
-    'Primaria incompleta':          'Hasta primaria',
-    'Primaria':                     'Hasta primaria',
-    'Secundaria 1ª etapa':          'Secundaria 1a etapa',
-    'Secundaria 1ª etapa (título)': 'Secundaria 1a etapa',
-    'Secundaria 2ª etapa (gral)':   'Post-secundaria',
-    'Post-secundaria no superior':  'Post-secundaria',
-}
-
-ENCODING_ORDINAL = {
-    'nivel_estudios':            {'Hasta primaria': 0, 'Secundaria 1a etapa': 1, 'Post-secundaria': 2},
-    'estado_salud':              {'Muy malo': 0, 'Malo': 1, 'Regular': 2, 'Bueno': 3, 'Muy bueno': 4},
-    'limitacion_actividad':      {'Gravemente limitado': 0, 'Limitado (no grave)': 1, 'No limitado': 2},
-    'grado_urbanizacion':        {'Zona poco poblada': 0, 'Zona media': 1, 'Zona muy poblada': 2},
-    'cambio_ingresos_12m':       {'Han disminuido': 0, 'Se mantienen': 1, 'Han aumentado': 2},
-    'expectativa_ingresos_12m':  {'Empeorar': 0, 'Mantenerse': 1, 'Mejorar': 2},
-    'carga_prestamos_no_vivienda': {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2},
-    'carga_asistencia_medica':   {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha utilizado': 3},
-    'carga_asistencia_dental':   {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha utilizado': 3},
-    'carga_medicamentos':        {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha consumido': 3},
-}
-
-COLS_BINARIAS = [
-    'sexo', 'jornada', 'personal_a_cargo', 'enfermedad_cronica',
-    'necesito_medico_no_fue', 'puede_vacaciones', 'puede_proteina_2dias',
-    'puede_calefaccion_invierno', 'hogar_riesgo_pobreza', 'hogar_carencia_material',
-    'arope_2020', 'arope_2030', 'carencia_material_social_severa',
-    'baja_intensidad_laboral_2020', 'puede_sustituir_muebles',
-]
-
-# 'No aplicable (≥60 años)' → NaN intencionado; el Pipeline imputará con mediana sobre train
-MAPA_BINARIO = {
-    'Sí': 1.0, 'Si': 1.0, 'No': 0.0,
-    'Hombre': 1.0, 'Mujer': 0.0,
-    'Tiempo completo': 1.0, 'Tiempo parcial': 0.0,
-    'No aplicable (≥60 años)': math.nan,
-    'No aplicable (>=60 anos)': math.nan,
-}
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FUNCIONES
@@ -135,15 +94,14 @@ def construir_target(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=comp_cols)
     return df
 
-# ----> Voy por aquí
-
-def eliminar_columnas(df: pd.DataFrame) -> pd.DataFrame:
-    '''Elimina constantes, IDs, variables con leakage y duplicadas.'''
-    cols_a_eliminar = (
-        COLS_CONSTANTES + COLS_IDS + COLS_TARGET_LEAK + COLS_DUPLICADAS
-    )
-    cols_ok = [c for c in cols_a_eliminar if c in df.columns]
-    return df.drop(columns=cols_ok)
+# INCORPORAR EN PIPELINE DE PREPROCESADO
+# def eliminar_columnas(df: pd.DataFrame) -> pd.DataFrame:
+    # '''Elimina constantes, IDs, variables con leakage y duplicadas.'''
+    # cols_a_eliminar = (
+    #     COLS_CONSTANTES + COLS_IDS + COLS_TARGET_LEAK + COLS_DUPLICADAS
+    # )
+    # cols_ok = [c for c in cols_a_eliminar if c in df.columns]
+    # return df.drop(columns=cols_ok)
 
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -166,15 +124,18 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     # Precariedad laboral
     es_temporal = df['tipo_contrato'].isin(['Temporal escrito', 'Temporal verbal'])
     es_parcial  = df['jornada'] == 'Tiempo parcial'
-    df['precariedad_laboral'] = (es_temporal | es_parcial).astype('Int64')
+    df['precariedad_laboral'] = (es_temporal | es_parcial).astype(int)
 
     # Agrupación nivel_estudios
     df['nivel_estudios'] = df['nivel_estudios'].map(MAPA_ESTUDIOS)
 
+
+    # INCORPORARLO EN EL PIPELINE
+
     # log1p sobre rentas
-    for col in COLS_LOG1P:
-        if col in df.columns:
-            df[f'log_{col}'] = np.log1p(df[col].clip(lower=0))
+    # for col in COLS_LOG1P:
+    #     if col in df.columns:
+    #         df[f'log_{col}'] = np.log1p(df[col].clip(lower=0))
 
     return df
 
@@ -211,6 +172,7 @@ def encoding_fijo(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+# ----> Voy por aquí
 
 def exportar_splits(
     df: pd.DataFrame,
@@ -289,36 +251,36 @@ def run() -> None:
     train_set.to_csv(PATH_GOLD_SPLIT_RAW + 'train_set.csv', index=False)
     test_set.to_csv(PATH_GOLD_SPLIT_RAW + 'test_set.csv', index=False)
 
-# ----> Voy por aquí
 
-
-    # ── PASOS 4–8: Transformaciones deterministas (sobre df completo) ──────────
+    #  PASOS 4–6:
     # Aunque las transformaciones se aplican al dataset completo, son seguras
     # porque ninguna calcula estadísticas sobre la muestra:
     #   · Los mapas de encoding son fijos (definidos en constantes arriba)
     #   · El p99 de ratio_carga_vivienda es un umbral de diseño documentado
     #   · log1p no depende de los datos
-    # El split de índices ya está fijado; X_train / X_test se extraen al final.
+
+# INCORPORAR EN PIPELINE DE PREPROCESADO
+
+    # print(f'\n{sep}')
+    # print('PASO 4 - Eliminación de columnas')
+    # print(sep)
+    # n_antes = df.shape[1]
+    # df = eliminar_columnas(df)
+    # print(f'  Eliminadas: {n_antes - df.shape[1]} columnas  |  Restantes: {df.shape[1]}')
+
 
     print(f'\n{sep}')
-    print('PASO 4 - Eliminación de columnas')
-    print(sep)
-    n_antes = df.shape[1]
-    df = eliminar_columnas(df)
-    print(f'  Eliminadas: {n_antes - df.shape[1]} columnas  |  Restantes: {df.shape[1]}')
-
-    print(f'\n{sep}')
-    print('PASO 5 - Feature engineering')
+    print('PASO 4 - Feature engineering')
     print(sep)
     df = feature_engineering(df)
-    cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral'] \
-                + [f'log_{c}' for c in COLS_LOG1P if c in df.columns]
+    cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral']
+                # + [f'log_{c}' for c in COLS_LOG1P if c in df.columns] INCORPORAR EN EL PIPELINE
     print(f'  Columnas creadas: {len(cols_nuevas)}')
     for c in cols_nuevas:
         print(f'    + {c}')
 
     print(f'\n{sep}')
-    print('PASO 6 - Imputación semántica')
+    print('PASO 5 - Imputación semántica')
     print(sep)
     df = imputacion_semantica(df)
     print('  motivo_aumento_ingresos     → NaN imputados como "No aplica (sin aumento)"')
@@ -326,10 +288,12 @@ def run() -> None:
     print('  expectativa_sin_respuesta   → indicador binario creado')
 
     print(f'\n{sep}')
-    print('PASO 7 - Encoding ordinal (mapa fijo)')
+    print('PASO 6 - Encoding ordinal (mapa fijo)')
     print(sep)
     df = encoding_fijo(df)
     print(f'  Ordinal: {len(ENCODING_ORDINAL)} variables  |  Binario: {len(COLS_BINARIAS)} variables')
+
+# ----> Voy por aquí
 
     # ── PASO 8: Reconstruir splits con el dataset Gold transformado ────────────
     X_train = df.drop(columns=[c for c in COLS_AUX if c in df.columns]).loc[idx_train]
