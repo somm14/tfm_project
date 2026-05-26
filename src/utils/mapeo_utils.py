@@ -1,3 +1,5 @@
+import numpy as np
+
 # ----------------------------------------------------------------
 # VARIABLES SELECCIONADAS PARA EL DATASET ANTES DE DESCODIFICARLAS
 # ----------------------------------------------------------------
@@ -377,4 +379,47 @@ COMPONENTES_ESTRES = {
     'retrasos_facturas':            ['Sí, una vez', 'Sí, dos o más veces'],
     'retrasos_hipoteca_alquiler':   ['Sí, una vez', 'Sí, dos o más veces'],
     'retrasos_deudas_no_vivienda':  ['Sí, una vez', 'Sí, dos o más veces'],
+}
+
+# ----------------------------------------------------------------
+# MAPEO PARA LA CATEGORIZACIÓN DEL NIVEL DE ESTUDIOS
+# ----------------------------------------------------------------
+
+MAPA_ESTUDIOS = {
+    'Sin estudios':                 'Hasta primaria',
+    'Primaria incompleta':          'Hasta primaria',
+    'Primaria':                     'Hasta primaria',
+    'Secundaria 1ª etapa':          'Secundaria 1a etapa',
+    'Secundaria 1ª etapa (título)': 'Secundaria 1a etapa',
+    'Secundaria 2ª etapa (gral)':   'Post-secundaria',
+    'Post-secundaria no superior':  'Post-secundaria',
+}
+
+# ----------------------------------------------------------------
+# ENCODING DE VARIABLES CATEGÓRICAS ORDINALES
+# ----------------------------------------------------------------
+
+ENCODING_ORDINAL = {
+    'nivel_estudios':            {'Hasta primaria': 0, 'Secundaria 1a etapa': 1, 'Post-secundaria': 2},
+    'estado_salud':              {'Muy malo': 0, 'Malo': 1, 'Regular': 2, 'Bueno': 3, 'Muy bueno': 4},
+    'limitacion_actividad':      {'Gravemente limitado': 0, 'Limitado (no grave)': 1, 'No limitado': 2},
+    'grado_urbanizacion':        {'Zona poco poblada': 0, 'Zona media': 1, 'Zona muy poblada': 2},
+    'cambio_ingresos_12m':       {'Han disminuido': 0, 'Se mantienen': 1, 'Han aumentado': 2},
+    'expectativa_ingresos_12m':  {'Empeorar': 0, 'Mantenerse': 1, 'Mejorar': 2},
+    'carga_prestamos_no_vivienda': {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2},
+    'carga_asistencia_medica':   {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha utilizado': 3},
+    'carga_asistencia_dental':   {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha utilizado': 3},
+    'carga_medicamentos':        {'Una carga pesada': 0, 'Una carga razonable': 1, 'Ninguna carga': 2, 'No ha consumido': 3},
+}
+
+# ----------------------------------------------------------------
+# ENCODING DE VARIABLES CATEGÓRICAS BINARIAS
+# ----------------------------------------------------------------
+
+MAPA_BINARIO = {
+    'Sí': 1.0, 'Si': 1.0, 'No': 0.0,
+    'Hombre': 1.0, 'Mujer': 0.0,
+    'Tiempo completo': 1.0, 'Tiempo parcial': 0.0,
+    'No aplicable (≥60 años)': np.nan,
+    'No aplicable (>=60 anos)': np.nan,
 }

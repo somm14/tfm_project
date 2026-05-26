@@ -1,12 +1,14 @@
+import numpy as np
 import os
+import pandas as pd
 
 import matplotlib.pyplot as plt
-
 from matplotlib.patches import FancyBboxPatch
+
+from pathlib import Path
 
 from utils.constants_var import PALETTE
 
-from pathlib import Path
 os.chdir(Path(__file__).resolve().parent.parent.parent)
 
 plt.rcParams.update({
@@ -229,3 +231,69 @@ def distribucion_target(y_train, y_test):
     ratio_test  = (y_test  == 1).mean()
     print(f'Ratio clase 1 - Train: {ratio_train:.4f}  |  Test: {ratio_test:.4f}')
     print(f'Diferencia absoluta:   {abs(ratio_train - ratio_test):.4f}  (debe ser < 0.005)')
+
+
+
+def dis_components_target(df, componentes_estres):
+    fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+    fig.suptitle('Distribución de los 5 componentes del estrés financiero',
+                fontweight='bold', y=1.01)
+
+    COLORES_COMP = {'stress': '#C73E1D', 'ok': '#2E86AB', 'nan': '#999'}
+
+    for ax, (col, vals_stress) in zip(axes, componentes_estres.items()):
+        vc = df[col].value_counts(dropna=False)
+        colores = []
+        for k in vc.index:
+            if pd.isna(k):          colores.append(COLORES_COMP['nan'])
+            elif k in vals_stress:  colores.append(COLORES_COMP['stress'])
+            else:                   colores.append(COLORES_COMP['ok'])
+        bars = ax.barh([str(k)[:25] for k in vc.index], vc.values, color=colores)
+        ax.bar_label(bars, fmt='%d', padding=3, fontsize=8)
+        pct_stress = df[col].isin(vals_stress).mean() * 100
+        ax.set_title(col.replace('_', '\n'), fontsize=8, fontweight='bold')
+        ax.set_xlabel(f'n  ({pct_stress:.1f}% estrés)', fontsize=8)
+        ax.set_xlim(0, vc.max() * 1.2)
+
+    plt.tight_layout()
+    plt.savefig('src/img/gold_componentes_target.png', bbox_inches='tight')
+    plt.show()
+    print('Rojo = condición activa | Azul = sin estrés | Gris = NaN')
+
+
+
+def ratio_carga_vivienda(df):
+    fig, ax = plt.subplots(figsize=(9, 3.5))
+    df['ratio_carga_vivienda'].dropna().hist(bins=50, ax=ax, color='#2E86AB', alpha=0.8)
+    ax.axvline(0.30, color='#C73E1D', linestyle='--', lw=1.5, label='30% (umbral sobrecarga)')
+    ax.set_xlabel('Ratio gastos vivienda / renta salarial neta')
+    ax.set_ylabel('Personas')
+    ax.set_title('Distribución del ratio de carga de vivienda', fontweight='bold')
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig('src/img/gold_ratio_vivienda.png', bbox_inches='tight')
+    plt.show()
+
+    n_sob = (df['ratio_carga_vivienda'] > 0.30).sum()
+    print(f'Personas con ratio > 30% (sobrecarga): {n_sob} ({n_sob/len(df)*100:.1f}%)')
+
+
+
+def distribucion_logs(df, cols_log):
+    fig, axes = plt.subplots(2, len(cols_log), figsize=(18, 6))
+    fig.suptitle('Efecto de log1p sobre las distribuciones de renta y vivienda', fontweight='bold')
+
+    for i, col in enumerate(cols_log):
+        if col not in df.columns: continue
+        datos = df[col].dropna()
+        axes[0, i].hist(datos, bins=40, color='#2E86AB', alpha=0.8, edgecolor='white')
+        axes[0, i].set_title(f'{col}\nskew={datos.skew():.2f}', fontsize=7)
+        axes[0, i].set_ylabel('n' if i == 0 else '')
+        datos_log = np.log1p(datos)
+        axes[1, i].hist(datos_log, bins=40, color='#A23B72', alpha=0.8, edgecolor='white')
+        axes[1, i].set_title(f'log1p({col})\nskew={datos_log.skew():.2f}', fontsize=7)
+        axes[1, i].set_ylabel('n' if i == 0 else '')
+
+    plt.tight_layout()
+    plt.savefig('src/img/gold_log1p_rentas.png', bbox_inches='tight')
+    plt.show()

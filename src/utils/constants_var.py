@@ -21,3 +21,14 @@ PATH_GOLD_SPLIT_RAW = DATA_DIR_GOLD / 'raw/'
 
 # Constantes para el dataset de modelado
 COLS_AUX = ['estres_financiero_alto', 'peso_persona']
+COLS_LOG1P = [
+    'renta_neta_salarial', 'renta_no_monetaria_salarial', 'renta_neta_hogar',
+    'renta_hogar_per_capita', 'importe_alquiler', 'cuota_hipoteca', 'gastos_vivienda',
+]
+COLS_BINARIAS = [
+    'sexo', 'jornada', 'personal_a_cargo', 'enfermedad_cronica',
+    'necesito_medico_no_fue', 'puede_vacaciones', 'puede_proteina_2dias',
+    'puede_calefaccion_invierno', 'hogar_riesgo_pobreza', 'hogar_carencia_material',
+    'arope_2020', 'arope_2030', 'carencia_material_social_severa', 'baja_intensidad_laboral_2020',
+    'puede_sustituir_muebles',
+]
