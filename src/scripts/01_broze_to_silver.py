@@ -1,5 +1,5 @@
 '''
-limpieza_ecv.py
+01_broze_to_silver.py
 ===============
 Script de limpieza y preparación de los microdatos ECV 2025 para el TFM.
 Parte de los CSVs originales del INE (sin mapear).
@@ -22,12 +22,69 @@ Salida: data/ECV_2025/dataset_analitico.csv
 # import re
 import pandas as pd
 import numpy as np
+import os
 
-# from pathlib import Path
+from sklearn.model_selection import train_test_split
 
-from src.utils.constants_var import *
+from pathlib import Path
+os.chdir(Path(__file__).resolve().parent.parent.parent)
+
+print('path ->', os.getcwd())
+
+from src.utils.constants_utils import *
 from src.utils.cleaning_utils import cargar_csv
 from src.utils.mapeo_utils import *
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FUNCIONES
+# ─────────────────────────────────────────────────────────────────────────────
+
+def construir_target(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Construye estres_financiero_alto (binario, ≥2 de 5 condiciones).
+    NaN cuando el score_comp es indeterminable (< 4 componentes disponibles y score_comp < 2).
+    '''
+    for col, vals in COMPONENTES_ESTRES.items():
+        df[f'_comp_{col}'] = df[col].isin(vals).astype('Int64')
+
+    comp_cols = [f'_comp_{c}' for c in COMPONENTES_ESTRES]
+    score_comp = df[comp_cols].sum(axis=1, skipna=True)
+    not_nulls = df[comp_cols].notna().sum(axis=1)
+
+    df['estres_financiero_alto'] = np.where(
+        score_comp >= 2, 1,
+        np.where((score_comp < 2) & (not_nulls >= 4), 0, np.nan)
+    ).astype(int)
+
+    df = df.drop(columns=comp_cols)
+    return df
+
+
+def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    '''Transformaciones deterministas: sin estadísticas de muestra.'''
+
+    # Renta per cápita
+    df['renta_hogar_per_capita'] = df['renta_neta_hogar'] / df['unidades_consumo']
+
+    # Ratio carga vivienda (capeado al p99 sobre la muestra completa antes del split
+    # es aceptable porque es una decisión de diseño fija, no un parámetro aprendido)
+    ratio = np.where(
+        df['renta_neta_salarial'] > 0,
+        (df['gastos_vivienda'] * 12) / df['renta_neta_salarial'],
+        np.nan
+    )
+    df['ratio_carga_vivienda'] = ratio
+    p99 = pd.Series(ratio).quantile(0.99)       # parámetro de diseño fijo
+    df['ratio_carga_vivienda'] = df['ratio_carga_vivienda'].clip(upper=p99)
+
+    # Precariedad laboral
+    es_temporal = df['tipo_contrato'].isin(['Temporal escrito', 'Temporal verbal'])
+    es_parcial  = df['jornada'] == 'Tiempo parcial'
+    df['precariedad_laboral'] = (es_temporal | es_parcial).astype(int)
+
+    # Agrupación nivel_estudios
+    df['nivel_estudios'] = df['nivel_estudios'].map(MAPA_ESTUDIOS)
 
 def run():
     print("Ejecutando limpieza...")
@@ -217,6 +274,58 @@ def run():
                 df[col] = df[col].astype(str).where(df[col].notna(), other=np.nan)
             df[col] = df[col].map(mapping)
 
+    # ══════════════════════════════════════════════════════════════════════════════
+    # 10. CONTRUIR TARGET
+    # ══════════════════════════════════════════════════════════════════════════════
+    sep = '═' * 62
+
+    print(f'\n{sep}')
+    print('Construcción del target estres_financiero_alto')
+    print(sep)
+    df = construir_target(df)
+
+    # ══════════════════════════════════════════════════════════════════════════════
+    # 11. FEATURE ENGINEERING
+    # ══════════════════════════════════════════════════════════════════════════════
+
+    print(f'\n{sep}')
+    print('Feature engineering')
+    print(sep)
+    df = feature_engineering(df)
+    cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral']
+                # + [f'log_{c}' for c in COLS_LOG1P if c in df.columns] INCORPORAR EN EL PIPELINE
+    print(f'  Columnas creadas: {len(cols_nuevas)}')
+    for c in cols_nuevas:
+        print(f'    + {c}')
+
+    df.to_csv(PATH_SILVER_ANALITICO, index=False)
+
+    # ══════════════════════════════════════════════════════════════════════════════
+    # 12. TRAIN / TEST SPLIT
+    # ══════════════════════════════════════════════════════════════════════════════
+
+    print(f'\n{sep}')
+    print('PASO 3 - TRAIN / TEST SPLIT')
+    print(sep)
+
+    X_raw = df.drop(columns=[c for c in COLS_AUX if c in df.columns])
+    y_raw = df['estres_financiero_alto'].astype(int)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_raw, y_raw,
+        test_size=0.20,
+        random_state=42,
+        stratify=y_raw,
+    )
+
+    train_set = X_train
+    train_set['estres_financiero_alto'] = y_train
+
+    test_set = X_test
+    test_set['estres_financiero_alto'] = y_test
+
+    train_set.to_csv(PATH_TRAIN_SILVER, index=False)
+    test_set.to_csv(PATH_TEST_SILVER, index=False)
 
     # ══════════════════════════════════════════════════════════════════════════════
     # 10. EXPORTACIÓN

@@ -94,15 +94,6 @@ def construir_target(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=comp_cols)
     return df
 
-# INCORPORAR EN PIPELINE DE PREPROCESADO
-# def eliminar_columnas(df: pd.DataFrame) -> pd.DataFrame:
-    # '''Elimina constantes, IDs, variables con leakage y duplicadas.'''
-    # cols_a_eliminar = (
-    #     COLS_CONSTANTES + COLS_IDS + COLS_TARGET_LEAK + COLS_DUPLICADAS
-    # )
-    # cols_ok = [c for c in cols_a_eliminar if c in df.columns]
-    # return df.drop(columns=cols_ok)
-
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     '''Transformaciones deterministas: sin estadísticas de muestra.'''
@@ -130,6 +121,16 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     df['nivel_estudios'] = df['nivel_estudios'].map(MAPA_ESTUDIOS)
 
 
+# INCORPORAR EN PIPELINE DE PREPROCESADO
+# def eliminar_columnas(df: pd.DataFrame) -> pd.DataFrame:
+    # '''Elimina constantes, IDs, variables con leakage y duplicadas.'''
+    # cols_a_eliminar = (
+    #     COLS_CONSTANTES + COLS_IDS + COLS_TARGET_LEAK + COLS_DUPLICADAS
+    # )
+    # cols_ok = [c for c in cols_a_eliminar if c in df.columns]
+    # return df.drop(columns=cols_ok)
+
+
     # INCORPORARLO EN EL PIPELINE
 
     # log1p sobre rentas
@@ -137,74 +138,78 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     #     if col in df.columns:
     #         df[f'log_{col}'] = np.log1p(df[col].clip(lower=0))
 
-    return df
+    # return df
 
+# INCORPORARLO EN EL PIPELINE
 
-def imputacion_semantica(df: pd.DataFrame) -> pd.DataFrame:
-    '''
-    Solo imputa nulos cuyo significado es conocido a priori (diseño del cuestionario).
-    El resto de NaN se delega al Pipeline tras el split.
-    '''
-    df['motivo_aumento_ingresos'] = (
-        df['motivo_aumento_ingresos'].fillna('No aplica (sin aumento)')
-    )
-    df['motivo_disminucion_ingresos'] = (
-        df['motivo_disminucion_ingresos'].fillna('No aplica (sin disminucion)')
-    )
-    # Indicador binario de no-respuesta; el VALOR de expectativa_ingresos_12m
-    # se conserva como NaN para imputación con moda ajustada solo sobre train.
-    df['expectativa_sin_respuesta'] = df['expectativa_ingresos_12m'].isna().astype(int)
-    return df
+# def imputacion_semantica(df: pd.DataFrame) -> pd.DataFrame:
+#     '''
+#     Solo imputa nulos cuyo significado es conocido a priori (diseño del cuestionario).
+#     El resto de NaN se delega al Pipeline tras el split.
+#     '''
+#     df['motivo_aumento_ingresos'] = (
+#         df['motivo_aumento_ingresos'].fillna('No aplica (sin aumento)')
+#     )
+#     df['motivo_disminucion_ingresos'] = (
+#         df['motivo_disminucion_ingresos'].fillna('No aplica (sin disminucion)')
+#     )
+#     # Indicador binario de no-respuesta; el VALOR de expectativa_ingresos_12m
+#     # se conserva como NaN para imputación con moda ajustada solo sobre train.
+#     df['expectativa_sin_respuesta'] = df['expectativa_ingresos_12m'].isna().astype(int)
+#     return df
 
+# INCORPORARLO EN EL PIPELINE
 
-def encoding_fijo(df: pd.DataFrame) -> pd.DataFrame:
-    '''Encodings deterministas: mapa fijo predefinido por conocimiento del dominio.'''
+# def encoding_fijo(df: pd.DataFrame) -> pd.DataFrame:
+#     '''Encodings deterministas: mapa fijo predefinido por conocimiento del dominio.'''
 
-    # Ordinal
-    for col, mapa in ENCODING_ORDINAL.items():
-        if col in df.columns:
-            df[col] = df[col].map(mapa)
+#     # Ordinal
+#     for col, mapa in ENCODING_ORDINAL.items():
+#         if col in df.columns:
+#             df[col] = df[col].map(mapa)
 
-    # Binario
-    for col in COLS_BINARIAS:
-        if col in df.columns:
-            df[col] = df[col].map(MAPA_BINARIO)
+#     # Binario
+#     for col in COLS_BINARIAS:
+#         if col in df.columns:
+#             df[col] = df[col].map(MAPA_BINARIO)
 
-    return df
+#     return df
 
 # ----> Voy por aquí
 
-def exportar_splits(
-    df: pd.DataFrame,
-    X_train: pd.DataFrame,
-    X_test: pd.DataFrame,
-    y_train: pd.Series,
-    y_test: pd.Series,
-) -> None:
-    '''Exporta el dataset Gold completo y los splits de train/test.'''
-    PATH_GOLD_DIR.mkdir(parents=True, exist_ok=True)
+# NO HACE FALTA USARLO
 
-    # Dataset Gold completo
-    df.to_csv(PATH_GOLD, index=False, encoding='utf-8-sig')
-    print(f'  dataset_modelado.csv → {PATH_GOLD}  ({df.shape[0]:,} × {df.shape[1]})')
+# def exportar_splits(
+#     df: pd.DataFrame,
+#     X_train: pd.DataFrame,
+#     X_test: pd.DataFrame,
+#     y_train: pd.Series,
+#     y_test: pd.Series,
+# ) -> None:
+#     '''Exporta el dataset Gold completo y los splits de train/test.'''
+#     PATH_GOLD_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Splits X e y
-    X_train.to_csv(PATH_GOLD_DIR / 'X_train.csv', index=False)
-    X_test.to_csv( PATH_GOLD_DIR / 'X_test.csv',  index=False)
-    y_train.to_csv(PATH_GOLD_DIR / 'y_train.csv', index=False, header=True)
-    y_test.to_csv( PATH_GOLD_DIR / 'y_test.csv',  index=False, header=True)
-    print(f'  X_train.csv  {X_train.shape}  |  X_test.csv  {X_test.shape}')
-    print(f'  y_train.csv  {y_train.shape}  |  y_test.csv  {y_test.shape}')
+#     # Dataset Gold completo
+#     df.to_csv(PATH_GOLD, index=False, encoding='utf-8-sig')
+#     print(f'  dataset_modelado.csv → {PATH_GOLD}  ({df.shape[0]:,} × {df.shape[1]})')
 
-    # Peso muestral (auxiliar - no es feature)
-    if 'peso_persona' in df.columns:
-        df.loc[X_train.index, 'peso_persona'].to_csv(
-            PATH_GOLD_DIR / 'peso_train.csv', index=False, header=True
-        )
-        df.loc[X_test.index, 'peso_persona'].to_csv(
-            PATH_GOLD_DIR / 'peso_test.csv', index=False, header=True
-        )
-        print('  peso_train.csv  |  peso_test.csv')
+#     # Splits X e y
+#     X_train.to_csv(PATH_GOLD_DIR / 'X_train.csv', index=False)
+#     X_test.to_csv( PATH_GOLD_DIR / 'X_test.csv',  index=False)
+#     y_train.to_csv(PATH_GOLD_DIR / 'y_train.csv', index=False, header=True)
+#     y_test.to_csv( PATH_GOLD_DIR / 'y_test.csv',  index=False, header=True)
+#     print(f'  X_train.csv  {X_train.shape}  |  X_test.csv  {X_test.shape}')
+#     print(f'  y_train.csv  {y_train.shape}  |  y_test.csv  {y_test.shape}')
+
+#     # Peso muestral (auxiliar - no es feature)
+#     if 'peso_persona' in df.columns:
+#         df.loc[X_train.index, 'peso_persona'].to_csv(
+#             PATH_GOLD_DIR / 'peso_train.csv', index=False, header=True
+#         )
+#         df.loc[X_test.index, 'peso_persona'].to_csv(
+#             PATH_GOLD_DIR / 'peso_test.csv', index=False, header=True
+#         )
+#         print('  peso_train.csv  |  peso_test.csv')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -226,6 +231,17 @@ def run() -> None:
     print('PASO 1 - Construcción del target estres_financiero_alto')
     print(sep)
     df = construir_target(df)
+
+    # PASO 2. FEATURE ENGINEERING
+    print(f'\n{sep}')
+    print('PASO 2 - Feature engineering')
+    print(sep)
+    df = feature_engineering(df)
+    cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral']
+                # + [f'log_{c}' for c in COLS_LOG1P if c in df.columns] INCORPORAR EN EL PIPELINE
+    print(f'  Columnas creadas: {len(cols_nuevas)}')
+    for c in cols_nuevas:
+        print(f'    + {c}')
 
     # PASO 3: TRAIN / TEST SPLIT
     print(f'\n{sep}')
@@ -252,13 +268,6 @@ def run() -> None:
     test_set.to_csv(PATH_GOLD_SPLIT_RAW + 'test_set.csv', index=False)
 
 
-    #  PASOS 4–6:
-    # Aunque las transformaciones se aplican al dataset completo, son seguras
-    # porque ninguna calcula estadísticas sobre la muestra:
-    #   · Los mapas de encoding son fijos (definidos en constantes arriba)
-    #   · El p99 de ratio_carga_vivienda es un umbral de diseño documentado
-    #   · log1p no depende de los datos
-
 # INCORPORAR EN PIPELINE DE PREPROCESADO
 
     # print(f'\n{sep}')
@@ -268,46 +277,19 @@ def run() -> None:
     # df = eliminar_columnas(df)
     # print(f'  Eliminadas: {n_antes - df.shape[1]} columnas  |  Restantes: {df.shape[1]}')
 
+    # print(f'\n{sep}')
+    # print('PASO 5 - Imputación semántica')
+    # print(sep)
+    # df = imputacion_semantica(df)
+    # print('  motivo_aumento_ingresos     → NaN imputados como "No aplica (sin aumento)"')
+    # print('  motivo_disminucion_ingresos → NaN imputados como "No aplica (sin disminucion)"')
+    # print('  expectativa_sin_respuesta   → indicador binario creado')
 
-    print(f'\n{sep}')
-    print('PASO 4 - Feature engineering')
-    print(sep)
-    df = feature_engineering(df)
-    cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral']
-                # + [f'log_{c}' for c in COLS_LOG1P if c in df.columns] INCORPORAR EN EL PIPELINE
-    print(f'  Columnas creadas: {len(cols_nuevas)}')
-    for c in cols_nuevas:
-        print(f'    + {c}')
-
-    print(f'\n{sep}')
-    print('PASO 5 - Imputación semántica')
-    print(sep)
-    df = imputacion_semantica(df)
-    print('  motivo_aumento_ingresos     → NaN imputados como "No aplica (sin aumento)"')
-    print('  motivo_disminucion_ingresos → NaN imputados como "No aplica (sin disminucion)"')
-    print('  expectativa_sin_respuesta   → indicador binario creado')
-
-    print(f'\n{sep}')
-    print('PASO 6 - Encoding ordinal (mapa fijo)')
-    print(sep)
-    df = encoding_fijo(df)
-    print(f'  Ordinal: {len(ENCODING_ORDINAL)} variables  |  Binario: {len(COLS_BINARIAS)} variables')
-
-# ----> Voy por aquí
-
-    # ── PASO 8: Reconstruir splits con el dataset Gold transformado ────────────
-    X_train = df.drop(columns=[c for c in COLS_AUX if c in df.columns]).loc[idx_train]
-    X_test  = df.drop(columns=[c for c in COLS_AUX if c in df.columns]).loc[idx_test]
-
-    # Resync de y con los índices del Gold (el target no cambia, pero por consistencia)
-    y_train = df.loc[idx_train, 'estres_financiero_alto'].astype(int)
-    y_test  = df.loc[idx_test,  'estres_financiero_alto'].astype(int)
-
-    # ── PASO 9: Exportación ────────────────────────────────────────────────────
-    print(f'\n{sep}')
-    print('PASO 9 - Exportación')
-    print(sep)
-    exportar_splits(df, X_train, X_test, y_train, y_test)
+    # print(f'\n{sep}')
+    # print('PASO 6 - Encoding ordinal (mapa fijo)')
+    # print(sep)
+    # df = encoding_fijo(df)
+    # print(f'  Ordinal: {len(ENCODING_ORDINAL)} variables  |  Binario: {len(COLS_BINARIAS)} variables')
 
     # ── Resumen final ──────────────────────────────────────────────────────────
     X_features = df.drop(columns=[c for c in COLS_AUX if c in df.columns])
