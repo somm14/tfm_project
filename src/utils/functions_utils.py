@@ -16,3 +16,18 @@ def cargar_csv(nombre: str) -> pd.DataFrame:
         except UnicodeDecodeError:
             continue
     raise ValueError(f'No se pudo leer {path}')
+
+
+
+# -----------------------------------------------------
+# PARA EL EDA
+# -----------------------------------------------------
+
+def tasa_estres_cat(df, col):
+    '''Para cada categoría de col, devuelve % de clase 1 en train.'''
+    return (
+        df.groupby(col)['estres_financiero_alto']
+        .mean()
+        .mul(100)
+        .sort_values(ascending=False)
+    )

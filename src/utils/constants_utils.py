@@ -2,8 +2,12 @@ import seaborn as sns
 
 from pathlib import Path
 
+# Visualizacones - Estilo visual
 PALETTE = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#3B1F2B']
 sns.set_palette(PALETTE)
+
+C0, C1    = '#2E86AB', '#C73E1D'   # clase 0 (azul), clase 1 (rojo)
+C_NEUTRAL = '#5C6B7A'
 
 # Raíz del proyecto (src/utils/ → src/ → project root)
 _ROOT = Path(__file__).resolve().parent.parent.parent

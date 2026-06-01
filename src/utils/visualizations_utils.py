@@ -3,11 +3,16 @@ import os
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
 from matplotlib.patches import FancyBboxPatch
 
 from pathlib import Path
 
-from utils.constants_var import PALETTE
+from scipy import stats
+
+from utils.constants_utils import PALETTE, C_NEUTRAL, C0, C1
+from utils.functions_utils import tasa_estres_cat
 
 os.chdir(Path(__file__).resolve().parent.parent.parent)
 
@@ -138,7 +143,7 @@ def dis_target_descod(df):
                     'Con cierta facilidad', 'Con facilidad', 'Con mucha facilidad']
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 9))
-    fig.suptitle('Componentes del estrés financiero — distribución tras decodificación\n'
+    fig.suptitle('Componentes del estrés financiero - distribución tras decodificación\n'
                 f'(asalariados de Madrid, N={len(df)})', fontweight='bold', fontsize=13, y=1.01)
     axes = axes.flatten()
 
@@ -185,7 +190,7 @@ def dis_bar_nuls(df):
     ax.axhline(50, color='#C73E1D', linestyle='--', alpha=0.6, label='50%')
     ax.axhline(20, color='#F18F01', linestyle='--', alpha=0.6, label='20%')
     ax.set_ylabel('% de valores nulos')
-    ax.set_title('Porcentaje de nulos por variable — dataset analítico Silver\n'
+    ax.set_title('Porcentaje de nulos por variable - dataset analítico Silver\n'
                 '(solo variables con algún nulo; nulos estructurales incluidos)', fontweight='bold')
     ax.legend(fontsize=9)
     ax.set_ylim(0, 105)
@@ -296,4 +301,177 @@ def distribucion_logs(df, cols_log):
 
     plt.tight_layout()
     plt.savefig('src/img/gold_log1p_rentas.png', bbox_inches='tight')
+    plt.show()
+
+
+
+def nulls_map(nulos, pct):
+    fig, ax = plt.subplots(figsize=(8, max(3, len(nulos) * 0.4)))
+    bars = ax.barh(nulos.index[::-1], pct.values[::-1], color=C_NEUTRAL, alpha=0.8)
+    ax.bar_label(bars, [f'{v}%' for v in pct.values[::-1]], padding=3, fontsize=8)
+    ax.set_xlabel('% nulos en train')
+    ax.set_title('Variables con nulos en train set', fontweight='bold')
+    ax.axvline(5, color='#C73E1D', linestyle='--', lw=1, alpha=0.7, label='5%')
+    ax.legend(fontsize=8)
+    plt.tight_layout()
+    plt.savefig('src/img/eda_mapa_nulos.png', bbox_inches='tight')
+    plt.show()
+
+
+
+def target_dis(total, n0, n1):
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+    # Barras de conteo
+    bars = axes[0].bar(['0 - Sin estrés', '1 - Estrés alto'], [n0, n1],
+                    color=[C0, C1], width=0.5, edgecolor='white')
+    axes[0].bar_label(bars, fmt='%d', padding=4)
+    for i, n in enumerate([n0, n1]):
+        axes[0].text(i, n / 2, f'{n/total*100:.1f}%', ha='center', va='center',
+                    color='white', fontsize=13, fontweight='bold')
+    axes[0].set_title('Distribución muestral del target', fontweight='bold')
+    axes[0].set_ylabel('Personas en train')
+
+    # Gráfico de tarta
+    axes[1].pie(
+        [n0, n1],
+        labels=[f'0 - Sin estrés\n({n0/total*100:.1f}%)', f'1 - Estrés alto\n({n1/total*100:.1f}%)'],
+        colors=[C0, C1], autopct='%1.1f%%', startangle=90,
+        wedgeprops={'edgecolor': 'white', 'linewidth': 2},
+    )
+    axes[1].set_title('Target: estres_financiero_alto', fontweight='bold')
+
+    fig.suptitle(f'Desbalanceo 1:{n0/n1:.1f} - se gestionará con class_weight="balanced"',
+                fontweight='bold', y=1.01)
+    plt.tight_layout()
+    plt.savefig('src/img/eda_target.png', bbox_inches='tight')
+    plt.show()
+
+    print(f'Clase 0: {n0:,}  ({n0/total*100:.1f}%)')
+    print(f'Clase 1: {n1:,}  ({n1/total*100:.1f}%)')
+    print(f'Ratio de desbalanceo: 1:{n0/n1:.1f}')
+
+
+
+def target_age_dis(t0, t1, train):
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+    # Distribución por clase
+    axes[0].hist(t0['edad'].dropna(), bins=30, color=C0, alpha=0.6,
+                label='Sin estrés', density=True)
+    axes[0].hist(t1['edad'].dropna(), bins=30, color=C1, alpha=0.6,
+                label='Estrés alto', density=True)
+    axes[0].set_title('Distribución de edad por clase', fontweight='bold')
+    axes[0].set_xlabel('Edad')
+    axes[0].set_ylabel('Densidad')
+    axes[0].legend(fontsize=9)
+
+    # Tasa de estrés por tramo de edad
+    bins_edad   = [16, 25, 35, 45, 55, 65]
+    labels_edad = ['16-24', '25-34', '35-44', '45-54', '55-64']
+    train['_tramo_edad'] = pd.cut(train['edad'], bins=bins_edad,
+                                labels=labels_edad, right=False)
+    tasa_edad = tasa_estres_cat(train, '_tramo_edad')
+    axes[1].bar(tasa_edad.index.astype(str), tasa_edad.values,
+                color=C1, alpha=0.85, edgecolor='white')
+    axes[1].set_title('Tasa de estrés por tramo de edad', fontweight='bold')
+    axes[1].set_xlabel('Tramo de edad')
+    axes[1].set_ylabel('% estrés alto')
+    axes[1].yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+
+    # Boxplot
+    axes[2].boxplot([t0['edad'].dropna(), t1['edad'].dropna()],
+                    labels=['Sin estrés', 'Estrés alto'],
+                    patch_artist=True,
+                    boxprops=dict(facecolor='white'),
+                    medianprops=dict(color='black', lw=2))
+    axes[2].set_title('Boxplot edad por clase', fontweight='bold')
+    axes[2].set_ylabel('Edad')
+
+    plt.tight_layout()
+    plt.savefig('src/img/eda_edad.png', bbox_inches='tight')
+    plt.show()
+    train = train.drop(columns=['_tramo_edad'])
+
+    print(f'Edad media - sin estrés: {t0["edad"].mean():.1f}  |  estrés alto: {t1["edad"].mean():.1f}')
+    stat, p = stats.mannwhitneyu(t0['edad'].dropna(), t1['edad'].dropna(),
+                                alternative='two-sided')
+    print(f'Mann-Whitney: U={stat:.0f}, p={p:.4f}  '
+        f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+
+
+
+def target_vs_var_demo_dis(cols_demo, train):
+    fig, axes = plt.subplots(1, len(cols_demo), figsize=(5 * len(cols_demo), 4))
+    if len(cols_demo) == 1: axes = [axes]
+
+    for ax, col in zip(axes, cols_demo):
+        tasas = tasa_estres_cat(train, col)
+        colores = [C1 if v >= 20 else C0 for v in tasas.values]
+        ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+        ax.set_title(f'Tasa estrés por {col}', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.tick_params(axis='x', rotation=20)
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+
+        tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+        stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+        print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+        
+    plt.tight_layout()
+    plt.savefig('src/img/eda_demograficas.png', bbox_inches='tight')
+    plt.show()
+
+
+def target_vs_var_lab(cols_lab, train):
+    fig, axes = plt.subplots(1, len(cols_lab), figsize=(5 * len(cols_lab), 4))
+    if len(cols_lab) == 1: axes = [axes]
+
+    for ax, col in zip(axes, cols_lab):
+        tasas = tasa_estres_cat(train, col)
+        colores = [C1 if v >= 20 else C0 for v in tasas.values]
+        ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+        ax.set_title(f'Tasa estrés por {col}', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.tick_params(axis='x', rotation=20)
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+
+        tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+        stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+        print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+
+    plt.tight_layout()
+    plt.savefig('src/img/eda_contrato_jornada.png', bbox_inches='tight')
+    plt.show()
+
+
+
+def target_vs_hours_exp(train, T0, T1):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    for ax, col, titulo in zip(axes,
+        ['horas_semana', 'anios_experiencia'],
+        ['Horas trabajadas por semana', 'Años de experiencia laboral']):
+        if col not in train.columns: continue
+        ax.hist(T0[col].dropna(), bins=30, color=C0, alpha=0.6,
+                label='Sin estrés', density=True)
+        ax.hist(T1[col].dropna(), bins=30, color=C1, alpha=0.6,
+                label='Estrés alto', density=True)
+        m0 = T0[col].mean()
+        m1 = T1[col].mean()
+        ax.axvline(m0, color=C0, linestyle='--', lw=1.5, label=f'Media 0: {m0:.1f}')
+        ax.axvline(m1, color=C1, linestyle='--', lw=1.5, label=f'Media 1: {m1:.1f}')
+        ax.set_title(titulo, fontweight='bold')
+        ax.set_xlabel(col)
+        ax.set_ylabel('Densidad')
+        ax.legend(fontsize=8)
+
+        stat, p = stats.mannwhitneyu(T0[col].dropna(), T1[col].dropna(),
+                                alternative='two-sided')
+        print(f'Mann-Whitney para {col}: U={stat:.0f}, p={p:.4f}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+
+    plt.tight_layout()
+    plt.savefig('src/img/eda_horas_experiencia.png', bbox_inches='tight')
     plt.show()
