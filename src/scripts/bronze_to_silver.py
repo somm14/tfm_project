@@ -33,7 +33,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from src.utils.constants_utils import *
-from src.utils.cleaning_utils import cargar_csv
+from src.utils.functions_utils import cargar_csv
 from src.utils.mapeo_utils import *
 
 
