@@ -116,6 +116,30 @@ VARS_SELECCIONADAS = [
 ]
 
 # ----------------------------------------------------------------
+# IMPUTACIÓN DE NULOS USANDO FLAGS
+# ----------------------------------------------------------------
+# --> Grupo A — flag -2 → valor semántico concreto
+GRUPO_A = {
+        'HS011':    ('HS011_F',    '3'),  # Sin hipoteca/alquiler → sin retrasos
+        'HS021':    ('HS021_F',    '3'),  # Sin facturas → sin retrasos
+        'HS031':    ('HS031_F',    '3'),  # Sin deudas → sin retrasos
+        'HS150':    ('HS150_F',    '3'),  # Sin préstamos → ninguna carga
+        'HH060':    ('HH060_F',      0),  # No alquila → importe = 0
+        'cuotahip': ('cuotahip_F',   0),  # Sin hipoteca → cuota = 0
+        'HS200':    ('HS200_F',    '4'),  # No usó asistencia médica
+        'HS210':    ('HS210_F',    '4'),  # No usó asistencia dental
+        'HS220':    ('HS220_F',    '4'),  # No consumió medicamentos
+        'PL271':    ('PL271_F',      0),  # 0 meses desempleo últimos 5 años
+        'PH040':    ('PH040_F',    '2')  # No necesitó médico
+    }
+
+# --> Grupo B — flag -2 → NaN estructural
+GRUPO_B = {
+        'HI020': 'HI020_F',  # Motivo aumento → solo si ingresos aumentaron
+        'HI030': 'HI030_F',  # Motivo disminución → solo si ingresos disminuyeron
+    }
+
+# ----------------------------------------------------------------
 # DESCODIFICACIÓN DEL NOMBRE DE LAS COLUMNAS
 # ----------------------------------------------------------------
 

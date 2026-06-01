@@ -29,7 +29,8 @@ from sklearn.model_selection import train_test_split
 from pathlib import Path
 os.chdir(Path(__file__).resolve().parent.parent.parent)
 
-print('path ->', os.getcwd())
+import warnings
+warnings.filterwarnings('ignore')
 
 from src.utils.constants_utils import *
 from src.utils.cleaning_utils import cargar_csv
@@ -85,16 +86,20 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
 
     # Agrupación nivel_estudios
     df['nivel_estudios'] = df['nivel_estudios'].map(MAPA_ESTUDIOS)
+    
+    return df
 
 def run():
     print("Ejecutando limpieza...")
-
-    # ══════════════════════════════════════════════════════════════════════════════
-    # 1. CARGA
-    # ══════════════════════════════════════════════════════════════════════════════
+    sep = '═' * 62
 
 
-    print('Cargando ficheros...')
+    # PASO 0: CARGA
+    print(f'\n{sep}')
+    print('CARGA DE DATOS')
+    print(sep)
+
+    print('\nCargando ficheros...')
     df_d = cargar_csv('01_datos_hogar.csv')       # Fichero D: datos básicos hogar
     df_h = cargar_csv('02_detalles_hogar.csv')    # Fichero H: detalle hogar (renta, vivienda, bienestar)
     df_p = cargar_csv('03_detalles_adulto.csv')   # Fichero P: datos adultos (trabajo, educación, salud, renta individual)
@@ -102,11 +107,12 @@ def run():
 
     print(f'  D: {df_d.shape} | H: {df_h.shape} | P: {df_p.shape} | R: {df_r.shape}')
 
-
     # ══════════════════════════════════════════════════════════════════════════════
-    # 2. JOINS
+    # PASO 1: JOINS
     # ══════════════════════════════════════════════════════════════════════════════
-
+    print(f'\n{sep}')
+    print('JOINS DE LOS FICHEROS')
+    print(sep)
     # ID hogar: DB030 (D) = HB030 (H)
     df_hogar = df_d.merge(df_h, left_on='DB030', right_on='HB030', how='inner')
 
@@ -119,17 +125,19 @@ def run():
 
     # Join hogar + persona
     df = df_hogar.merge(df_persona, left_on='DB030', right_on='id_hogar_join', how='inner')
-    print(f'  Tras joins: {df.shape}')
+    print(f'\n  Tras joins: {df.shape}')
     # Output -> Tras joins: (60825, 457)
 
-
     # ══════════════════════════════════════════════════════════════════════════════
-    # 3. FILTROS
+    # PASO 2: FILTROS
     # ══════════════════════════════════════════════════════════════════════════════
+    print(f'\n{sep}')
+    print('FILTRO POR COMUNIDAD DE MADRID Y ASALARIADOS')
+    print(sep)
 
     # Comunidad de Madrid
     df = df[df['DB040'].astype(str).str.strip() == 'ES30'].copy()
-    print(f'  Tras filtro Madrid: {df.shape}')
+    print(f'\n  Tras filtro Madrid: {df.shape}')
     # Output -> Tras filtro Madrid: (6035, 457)
 
 
@@ -140,13 +148,11 @@ def run():
         (df['PL032'].astype(str).str.strip() == '1') &
         (df['PL040A'].astype(str).str.strip() == '3')
     ].copy()
-    print(f'  Tras filtro asalariados: {df.shape}')
+    print(f'\n  Tras filtro asalariados: {df.shape}')
     # Output -> Tras filtro asalariados: (2947, 457)
 
-
     # ══════════════════════════════════════════════════════════════════════════════
-    # 4. SELECCIÓN DE VARIABLES
-    # ══════════════════════════════════════════════════════════════════════════════
+    # PASO 3: SELECCIÓN DE VARIABLES
     # Criterio general:
     #   - Se incluyen variables con valor predictivo para estrés financiero
     #   - Se excluyen variables administrativas/técnicas (año, país, ID internos)
@@ -154,44 +160,36 @@ def run():
     #   - Variables de renta bruta se excluyen cuando ya existe la neta (evitar redundancia)
     #   - Variables de meses en estados específicos (PL211*) se excluyen: muy granulares
     #     y con alta correlación entre sí → resumen suficiente con PL032 y PL080
-
+    # ══════════════════════════════════════════════════════════════════════════════
+    print(f'\n{sep}')
+    print('SELECCIÓN DE VARIABLES')
+    print(sep)
     # Varible VARS_SELECCIONADAS en mapeo_utils.py
 
     # Mantener solo las que existen en el df
     vars_seleccionadas = [v for v in VARS_SELECCIONADAS if v in df.columns]
     df = df[vars_seleccionadas].copy()
-    print(f'\tTras selección de variables: {df.shape}')
+    print(f'\n\tTras selección de variables: {df.shape}')
     # Output -> Tras selección de variables: (2947, 81)
 
-
     # ══════════════════════════════════════════════════════════════════════════════
-    # 5. IMPUTACIÓN DE NULOS USANDO FLAGS _F DEL INE
+    # PASO 4: IMPUTACIÓN DE NULOS USANDO FLAGS _F DEL INE
     #    Flag = 1  → Dato recogido correctamente
     #    Flag = -1 → 'No consta' (respuesta ausente) → NaN en la variable correspondiente
     #    Flag = -6 → 'No recogido por diseño muestral' → NaN en la variable correspondiente
     #    Flag = -2 → 'No aplicable' → depende: valor semántico o NaN estructural
     # ══════════════════════════════════════════════════════════════════════════════
-
+    print(f'\n{sep}')
+    print('IMPUTACIÓN DE NULOS USANDO FLAGS _F DEL INE')
+    print(sep)
     #-------------------------------------------------
     # Grupo A — flag -2 → valor semántico concreto
     #-------------------------------------------------
-    grupo_a = {
-        'HS011':    ('HS011_F',    '3'),  # Sin hipoteca/alquiler → sin retrasos
-        'HS021':    ('HS021_F',    '3'),  # Sin facturas → sin retrasos
-        'HS031':    ('HS031_F',    '3'),  # Sin deudas → sin retrasos
-        'HS150':    ('HS150_F',    '3'),  # Sin préstamos → ninguna carga
-        'HH060':    ('HH060_F',      0),  # No alquila → importe = 0
-        'cuotahip': ('cuotahip_F',   0),  # Sin hipoteca → cuota = 0
-        'HS200':    ('HS200_F',    '4'),  # No usó asistencia médica
-        'HS210':    ('HS210_F',    '4'),  # No usó asistencia dental
-        'HS220':    ('HS220_F',    '4'),  # No consumió medicamentos
-        'PL271':    ('PL271_F',      0),  # 0 meses desempleo últimos 5 años
-        'PH040':    ('PH040_F',    '2')  # No necesitó médico
-    }
 
+    print('\nImputando nulos del Grupo A...')
     # 'HH060', 'cuotahip' y 'PL271'necesitan un tratamiento especial ya que hay que hacer, previamente, una serie de transformaciones antes de la decodificación pertinente
     df = df.loc[:, ~df.columns.duplicated()] 
-    for var, (flag, valor) in grupo_a.items():
+    for var, (flag, valor) in GRUPO_A.items():
         if flag in df.columns and var in df.columns:
             mask = df[flag] == -2
             n = mask.sum()
@@ -199,21 +197,22 @@ def run():
                 df[var] = df[var].str.strip().replace('', np.nan).astype(float)
             if n > 0:
                 df.loc[mask, var] = valor
+
     #-------------------------------------------------
     # Grupo B — flag -2 → NaN estructural
     #-------------------------------------------------
-    grupo_b = {
-        'HI020': 'HI020_F',  # Motivo aumento → solo si ingresos aumentaron
-        'HI030': 'HI030_F',  # Motivo disminución → solo si ingresos disminuyeron
-    }
-
-    for var, flag in grupo_b.items():
+    
+    print('Imputando nulos del Grupo B...')
+    for var, flag in GRUPO_B.items():
         if flag in df.columns and var in df.columns:
             mask = df[flag] == -2
             df.loc[mask, var] = np.nan
+
     #-------------------------------------------------
     # **Grupo C — flag -1 (y -6 en PL060) → NaN
     #-------------------------------------------------
+
+    print('Imputando nulos del Grupo C...')
     for var in df.columns:
         if var != var.endswith('_F'):
             for valor in df[var].unique():
@@ -230,28 +229,47 @@ def run():
             if n > 0:
                 df.loc[mask, 'PL060'] = np.nan
 
+    print('Imputaciones finalizadas.')
 
     # ══════════════════════════════════════════════════════════════════════════════
-    # 6. ELIMINAR FLAGS _F Y COLUMNAS AUXILIARES
+    # PASO 5: ELIMINAR FLAGS _F Y COLUMNAS AUXILIARES
     # ══════════════════════════════════════════════════════════════════════════════
+
+    print(f'\n{sep}')
+    print('ELIMINAR FLAGS _F Y COLUMNAS AUXILIARES')
+    print(sep)
+
+    print('\nEliminando Flags...')
 
     cols_eliminar = [c for c in df.columns if c.endswith('_F')] + ['id_hogar_join']
     df = df.drop(columns=[c for c in cols_eliminar if c in df.columns])
 
+    print('Flags eliminadas.')
 
     # ══════════════════════════════════════════════════════════════════════════════
-    # 7. RENAME A SNAKE_CASE
+    # PASO 6: RENAME A SNAKE_CASE
     # ══════════════════════════════════════════════════════════════════════════════
+
+    print(f'\n{sep}')
+    print('RENAME A SNAKE_CASE')
+    print(sep)
+
+    print('\nRenombrando las variables...')
 
     # Variable RENAME_MAP en mapeo_utils.py
     df = df.rename(columns=RENAME_MAP)
 
+    print('Variables renombradas correctamente.')
 
     # ══════════════════════════════════════════════════════════════════════════════
-    # 8. DECODIFICACIÓN DE VALORES CATEGÓRICOS
+    # PASO 7: DECODIFICACIÓN DE VALORES CATEGÓRICOS
     #    Los CSVs del INE vienen con todas las columnas como string.
     #    Variables continuas (rentas, horas, etc.) se convierten a numérico sin decodificar.
     # ══════════════════════════════════════════════════════════════════════════════
+
+    print(f'\n{sep}')
+    print('DECODIFICACIÓN DE VALORES CATEGÓRICOS')
+    print(sep)
 
     # Convertir a numérico las variables continuas que vienen como string
     cols_numericas_str = [
@@ -265,6 +283,8 @@ def run():
 
     # DECODIFICACIONES (en mapeo_utils.py): todas las claves como string (formato real del INE)
 
+    print('\nDecodificando...')
+
     for col, mapping in DECODIFICACIONES.items():
         if col in df.columns:
             # Convertir float a int antes de hacer str, para evitar '1.0' en lugar de '1'
@@ -273,23 +293,28 @@ def run():
             else:
                 df[col] = df[col].astype(str).where(df[col].notna(), other=np.nan)
             df[col] = df[col].map(mapping)
+        
+    print('Variables decodificadas.')
 
     # ══════════════════════════════════════════════════════════════════════════════
-    # 10. CONTRUIR TARGET
+    # PASO 8: CONTRUIR TARGET
     # ══════════════════════════════════════════════════════════════════════════════
     sep = '═' * 62
 
     print(f'\n{sep}')
-    print('Construcción del target estres_financiero_alto')
+    print('CONSTRUCCIÓN TARGET estres_financiero_alto')
     print(sep)
+
     df = construir_target(df)
 
+    print('\nConstrucción del Target finalizado')
+
     # ══════════════════════════════════════════════════════════════════════════════
-    # 11. FEATURE ENGINEERING
+    # PASO 9: FEATURE ENGINEERING
     # ══════════════════════════════════════════════════════════════════════════════
 
     print(f'\n{sep}')
-    print('Feature engineering')
+    print('FEATURE ENGINEERING')
     print(sep)
     df = feature_engineering(df)
     cols_nuevas = ['renta_hogar_per_capita', 'ratio_carga_vivienda', 'precariedad_laboral']
@@ -298,14 +323,18 @@ def run():
     for c in cols_nuevas:
         print(f'    + {c}')
 
+    print('\nFeature Engineering finalizado')
+
+    print('\nGuardado como dataset_analitico.csv')
+
     df.to_csv(PATH_SILVER_ANALITICO, index=False)
 
     # ══════════════════════════════════════════════════════════════════════════════
-    # 12. TRAIN / TEST SPLIT
+    # PASO 10: TRAIN / TEST SPLIT
     # ══════════════════════════════════════════════════════════════════════════════
 
     print(f'\n{sep}')
-    print('PASO 3 - TRAIN / TEST SPLIT')
+    print('TRAIN / TEST SPLIT')
     print(sep)
 
     X_raw = df.drop(columns=[c for c in COLS_AUX if c in df.columns])
@@ -324,21 +353,9 @@ def run():
     test_set = X_test
     test_set['estres_financiero_alto'] = y_test
 
+    print('\nSplit de TRAIN y TEST finalizado.')
+
+    print('\nGuardado como train_silver.csv y test_silver.csv')
+
     train_set.to_csv(PATH_TRAIN_SILVER, index=False)
     test_set.to_csv(PATH_TEST_SILVER, index=False)
-
-    # ══════════════════════════════════════════════════════════════════════════════
-    # 10. EXPORTACIÓN
-    # ══════════════════════════════════════════════════════════════════════════════
-
-    PATH_OUT.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(PATH_OUT, index=False, encoding='utf-8-sig')
-
-    print(f'\n{'═'*60}')
-    print(f'Dataset analítico guardado en: {PATH_OUT}')
-    print(f'Filas: {len(df):,} | Columnas: {len(df.columns)}')
-    print(f'\nColumnas finales:')
-    for col in df.columns:
-        dtype = df[col].dtype
-        nulls = df[col].isna().sum()
-        print(f'  {col:<40} {str(dtype):<10} nulos: {nulls:,}')

@@ -1,4 +1,8 @@
-from src.scripts.limpieza_ecv import run as run_limpieza
+import os
+
+from src.scripts.bronze_to_silver import run as run_limpieza
+
+
 def main():
     print("Inicio pipeline\n")
 
