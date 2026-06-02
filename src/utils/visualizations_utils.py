@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
+import seaborn as sns
+
 from matplotlib.patches import FancyBboxPatch
 
 from pathlib import Path
@@ -353,7 +355,7 @@ def target_dis(total, n0, n1):
 
 
 
-def target_age_dis(t0, t1, train):
+def target_age_dis(t0, t1, train, dict_features):
     fig, axes = plt.subplots(1, 3, figsize=(14, 4))
 
     # Distribución por clase
@@ -396,12 +398,14 @@ def target_age_dis(t0, t1, train):
     print(f'Edad media - sin estrés: {t0["edad"].mean():.1f}  |  estrés alto: {t1["edad"].mean():.1f}')
     stat, p = stats.mannwhitneyu(t0['edad'].dropna(), t1['edad'].dropna(),
                                 alternative='two-sided')
+    dict_features['features'].append('edad')
+    dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
     print(f'Mann-Whitney: U={stat:.0f}, p={p:.4f}  '
         f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
 
 
 
-def target_vs_var_demo_dis(cols_demo, train):
+def target_vs_var_demo_dis(cols_demo, train, dict_features):
     fig, axes = plt.subplots(1, len(cols_demo), figsize=(5 * len(cols_demo), 4))
     if len(cols_demo) == 1: axes = [axes]
 
@@ -418,13 +422,15 @@ def target_vs_var_demo_dis(cols_demo, train):
         stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
         print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
             f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
-        
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
     plt.tight_layout()
     plt.savefig('src/img/eda_demograficas.png', bbox_inches='tight')
     plt.show()
 
 
-def target_vs_var_lab(cols_lab, train):
+def target_vs_var_lab(cols_lab, train, dict_features):
     fig, axes = plt.subplots(1, len(cols_lab), figsize=(5 * len(cols_lab), 4))
     if len(cols_lab) == 1: axes = [axes]
 
@@ -441,6 +447,8 @@ def target_vs_var_lab(cols_lab, train):
         stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
         print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
             f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
 
     plt.tight_layout()
     plt.savefig('src/img/eda_contrato_jornada.png', bbox_inches='tight')
@@ -448,7 +456,7 @@ def target_vs_var_lab(cols_lab, train):
 
 
 
-def target_vs_hours_exp(train, T0, T1):
+def target_vs_hours_exp(train, T0, T1, dict_features):
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     for ax, col, titulo in zip(axes,
         ['horas_semana', 'anios_experiencia'],
@@ -471,7 +479,391 @@ def target_vs_hours_exp(train, T0, T1):
                                 alternative='two-sided')
         print(f'Mann-Whitney para {col}: U={stat:.0f}, p={p:.4f}  '
             f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
 
     plt.tight_layout()
     plt.savefig('src/img/eda_horas_experiencia.png', bbox_inches='tight')
     plt.show()
+
+
+
+def desempleo_vs_target(train, T0, T1, dict_features):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    for ax, col, titulo in zip(axes,
+        ['meses_desempleo_ref', 'meses_desempleo_5anios'],
+        ['Meses en desempleo (año ref.)', 'Meses en desempleo (últimos 5 años)']):
+        if col not in train.columns: continue
+        ax.hist(T0[col].dropna(), bins=30, color=C0, alpha=0.6,
+                label='Sin estrés', density=True)
+        ax.hist(T1[col].dropna(), bins=30, color=C1, alpha=0.6,
+                label='Estrés alto', density=True)
+        ax.set_title(titulo, fontweight='bold')
+        ax.set_xlabel('Meses')
+        ax.set_ylabel('Densidad')
+        ax.legend(fontsize=9)
+
+        stat, p = stats.mannwhitneyu(T0[col].dropna(), T1[col].dropna(),
+                                        alternative='two-sided')
+        print(f'Mann-Whitney para {col}: U={stat:.0f}, p={p:.4f}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+    for col in ['meses_desempleo_ref', 'meses_desempleo_5anios']:
+        if col not in train.columns: continue
+        print(f'{col}: media sin estrés={T0[col].mean():.1f}  |  estrés alto={T1[col].mean():.1f}')
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_desempleo.png', bbox_inches='tight')
+        plt.show()
+
+
+
+def estudios_vs_target(train, dict_features):
+    if 'nivel_estudios' in train.columns:
+        tasas = tasa_estres_cat(train, 'nivel_estudios')
+
+        fig, ax = plt.subplots(figsize=(9, 4))
+        colores = [C1 if v >= 20 else C0 for v in tasas.values]
+        ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+        ax.set_title('Tasa de estrés por nivel de estudios', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.tick_params(axis='x', rotation=15)
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+        tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train['nivel_estudios'])
+        stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+        print(f'Chi-cuadrado con {'nivel_estudios'}: U={stat:.0f}, p={p}  '
+        f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+        dict_features['features'].append('nivel_estudios')
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_estudios.png', bbox_inches='tight')
+        plt.show()
+
+
+
+def target_vs_renta(train, T0, T1, dict_features):
+    COLS_RENTA = [c for c in [
+    'renta_neta_salarial', 'renta_neta_hogar',
+    'renta_hogar_per_capita', 'renta_no_monetaria_salarial',
+    ] if c in train.columns]
+
+    fig, axes = plt.subplots(2, len(COLS_RENTA), figsize=(4 * len(COLS_RENTA), 7))
+    if len(COLS_RENTA) == 1: axes = axes.reshape(-1, 1)
+
+    for j, col in enumerate(COLS_RENTA):
+        d0, d1 = T0[col].dropna(), T1[col].dropna()
+
+        # Fila 0: original
+        axes[0, j].hist(d0, bins=40, color=C0, alpha=0.6, density=True, label='Sin estrés')
+        axes[0, j].hist(d1, bins=40, color=C1, alpha=0.6, density=True, label='Estrés alto')
+        axes[0, j].axvline(d0.mean(), color=C0, linestyle='--', lw=1.5)
+        axes[0, j].axvline(d1.mean(), color=C1, linestyle='--', lw=1.5)
+        axes[0, j].set_title(f'{col}\nskew={pd.concat([d0,d1]).skew():.1f}',
+                            fontsize=9, fontweight='bold')
+        axes[0, j].set_ylabel('Densidad' if j == 0 else '')
+        axes[0, j].legend(fontsize=7)
+
+        # Fila 1: log1p
+        d0l = np.log1p(d0.clip(lower=0))
+        d1l = np.log1p(d1.clip(lower=0))
+        axes[1, j].hist(d0l, bins=40, color=C0, alpha=0.6, density=True)
+        axes[1, j].hist(d1l, bins=40, color=C1, alpha=0.6, density=True)
+        axes[1, j].set_title(f'log1p({col})\nskew={pd.concat([d0l,d1l]).skew():.1f}',
+                            fontsize=9)
+        axes[1, j].set_ylabel('Densidad (log)' if j == 0 else '')
+        stat, p = stats.mannwhitneyu(T0[col].dropna(), T1[col].dropna(),
+                                        alternative='two-sided')
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+    plt.suptitle('Rentas por clase — original vs log1p', fontweight='bold', y=1.01)
+    plt.tight_layout()
+    plt.savefig('src/img/eda_rentas.png', bbox_inches='tight')
+    plt.show()
+
+    print(f'  {"Variable":<35} {"Media sin estrés":>18} {"Media estrés alto":>18} {"Ratio":>7} {"p-valor":>10}')
+    print('  ' + '-' * 95)
+    for col in COLS_RENTA:
+        m0, m1 = T0[col].mean(), T1[col].mean()
+        print(f'  {col:<35} {m0:>17,.0f}€ {m1:>17,.0f}€ {m0/m1:>6.2f}x  {p:>8.4f}')
+
+
+
+def target_vs_var_vivienda(train, dict_features):
+    cols_viv = [c for c in ['regimen_tenencia', 'tipo_vivienda', 'tipo_hogar']
+            if c in train.columns]
+
+    if cols_viv:
+        fig, axes = plt.subplots(1, len(cols_viv), figsize=(5 * len(cols_viv), 7))
+        if len(cols_viv) == 1: axes = [axes]
+        for ax, col in zip(axes, cols_viv):
+            tasas = tasa_estres_cat(train, col)
+            colores = [C1 if v >= 20 else C0 for v in tasas.values]
+            ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+            ax.set_title(f'Tasa estrés por {col}', fontweight='bold')
+            ax.set_ylabel('% estrés alto')
+            ax.tick_params(axis='x', rotation=90)
+            ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+            tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+            stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+            print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+                f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+            dict_features['features'].append(col)
+            dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_vivienda.png', bbox_inches='tight')
+        plt.show()
+
+
+def target_vs_carga_vivienda(train, T0, T1, dict_features):
+    col = 'ratio_carga_vivienda'
+    if col in train.columns:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+        axes[0].hist(T0[col].dropna(), bins=40, color=C0, alpha=0.6,
+                    label='Sin estrés', density=True)
+        axes[0].hist(T1[col].dropna(), bins=40, color=C1, alpha=0.6,
+                    label='Estrés alto', density=True)
+        axes[0].axvline(0.30, color='black', linestyle='--', lw=1.5,
+                        label='30% (umbral sobrecarga)')
+        axes[0].set_title('Ratio carga vivienda / renta salarial', fontweight='bold')
+        axes[0].set_xlabel('Ratio')
+        axes[0].legend(fontsize=9)
+
+        train['_sobrecarga'] = (train[col] > 0.30).map(
+            {True: '>30% (sobrecarga)', False: '≤30%'}
+        )
+        tasas_sob = tasa_estres_cat(train, '_sobrecarga')
+        axes[1].bar(tasas_sob.index.astype(str), tasas_sob.values,
+                color=[C1, C0], alpha=0.85)
+        axes[1].set_title('Tasa de estrés según sobrecarga de vivienda', fontweight='bold')
+        axes[1].set_ylabel('% estrés alto')
+        axes[1].yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+        train = train.drop(columns=['_sobrecarga'])
+        stat, p = stats.mannwhitneyu(T0[col].dropna(), T1[col].dropna(),
+                                        alternative='two-sided')
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_ratio_vivienda.png', bbox_inches='tight')
+        plt.show()
+
+        n_sob = (train[col] > 0.30).sum()
+        print(f'Personas con sobrecarga (>30%): {n_sob} ({n_sob/len(train)*100:.1f}%)')
+        print(f'Ratio medio — sin estrés: {T0[col].mean():.2f}  |  estrés alto: {T1[col].mean():.2f}')
+        print(f'Mann-Whitney para {col}: U={stat:.0f}, p={p}  '
+        f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+
+
+
+def target_var_privacion(train, dict_features):
+    COLS_PRIV = [c for c in [
+    'puede_vacaciones', 'puede_proteina_2dias',
+    'puede_calefaccion_invierno', 'puede_sustituir_muebles',
+    ] if c in train.columns]
+
+    if COLS_PRIV:
+        # Una barra por (variable, valor): muestra separación entre categorías
+        filas = []
+        for col in COLS_PRIV:
+            for val, grp in train.groupby(col):
+                filas.append({
+                    'etiqueta': f'{col.replace("puede_","")} = {val}',
+                    'tasa': grp['estres_financiero_alto'].mean() * 100,
+                    'n': len(grp),
+                })
+            tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+            stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+            print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+            dict_features['features'].append(col)
+            dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        df_priv = pd.DataFrame(filas).sort_values('tasa', ascending=False)
+
+        fig, ax = plt.subplots(figsize=(12, 4))
+        colores = [C1 if 'No' in r else C0 for r in df_priv['etiqueta']]
+        bars = ax.bar(range(len(df_priv)), df_priv['tasa'], color=colores, alpha=0.85)
+        ax.bar_label(bars, [f'{v:.1f}%' for v in df_priv['tasa']], padding=3, fontsize=7)
+        ax.set_xticks(range(len(df_priv)))
+        ax.set_xticklabels(df_priv['etiqueta'], rotation=30, ha='right', fontsize=8)
+        ax.set_title('Tasa de estrés por indicador de privación material', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.0f%%'))
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_privacion.png', bbox_inches='tight')
+        plt.show()
+
+
+
+def target_vs_salud(train, dict_features):
+    cols_salud = [c for c in ['estado_salud', 'limitacion_actividad']
+              if c in train.columns]
+
+    if cols_salud:
+        fig, axes = plt.subplots(1, len(cols_salud), figsize=(6 * len(cols_salud), 4))
+        if len(cols_salud) == 1: axes = [axes]
+        for ax, col in zip(axes, cols_salud):
+            tasas = tasa_estres_cat(train, col)
+            colores = [C1 if v >= 20 else C0 for v in tasas.values]
+            ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+            ax.set_title(f'Tasa estrés por {col}', fontweight='bold')
+            ax.set_ylabel('% estrés alto')
+            ax.tick_params(axis='x', rotation=15)
+            ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+            tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+            stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+            print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+            dict_features['features'].append(col)
+            dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_salud.png', bbox_inches='tight')
+        plt.show()
+
+
+
+def target_vs_cambio_empleo(train, dict_features):
+    cols_din = [c for c in [
+    'cambio_ingresos_12m', 'expectativa_ingresos_12m',
+    'motivo_aumento_ingresos', 'motivo_disminucion_ingresos',
+        ] if c in train.columns]
+
+    for col in cols_din:
+        tasas = tasa_estres_cat(train, col)
+        colores = [C1 if v >= 20 else C0 for v in tasas.values]
+        fig, ax = plt.subplots(figsize=(max(6, len(tasas) * 1.2), 5))
+        ax.bar(tasas.index.astype(str), tasas.values, color=colores, alpha=0.85)
+        ax.set_title(f'Tasa de estrés por {col}', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.tick_params(axis='x', rotation=70)
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f%%'))
+        tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+        stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+        dict_features['features'].append(col)
+        dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+        f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+
+        plt.tight_layout()
+        plt.savefig(f'src/img/eda_{col}.png', bbox_inches='tight')
+        plt.show()
+
+
+
+def target_vs_INE(train, dict_features):
+    COLS_POB = [c for c in [
+    'hogar_riesgo_pobreza', 'hogar_carencia_material',
+    'arope_2020', 'arope_2030', 'carencia_material_social_severa',
+    'baja_intensidad_laboral_2020',
+    ] if c in train.columns]
+
+    if COLS_POB:
+        filas_pob = []
+        for col in COLS_POB:
+            for val, grp in train.groupby(col):
+                filas_pob.append({
+                    'etiqueta': f'{col}\n={val}',
+                    'tasa': grp['estres_financiero_alto'].mean() * 100,
+                })
+            
+            tabla_contingencia = pd.crosstab(train['estres_financiero_alto'], train[col])
+            stat, p, _, _ = stats.chi2_contingency(tabla_contingencia)
+            print(f'Chi-cuadrado con {col}: U={stat:.0f}, p={p}  '
+            f'{"-> diferencia significativa" if p < 0.05 else "-> no significativa"}')
+            dict_features['features'].append(col)
+            dict_features['importance'].append(f'{"diferencia significativa" if p < 0.05 else "no significativa"}')
+
+        df_pob = pd.DataFrame(filas_pob).sort_values('tasa', ascending=False).head(16)
+
+        fig, ax = plt.subplots(figsize=(12, 4.5))
+        colores = [C1 if v >= 20 else C0 for v in df_pob['tasa'].values]
+        ax.bar(range(len(df_pob)), df_pob['tasa'], color=colores, alpha=0.85)
+        ax.set_xticks(range(len(df_pob)))
+        ax.set_xticklabels(df_pob['etiqueta'], rotation=55, ha='right', fontsize=8)
+        ax.set_title('Tasa de estrés por indicador de pobreza INE', fontweight='bold')
+        ax.set_ylabel('% estrés alto')
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.0f%%'))
+
+        plt.tight_layout()
+        plt.savefig('src/img/eda_pobreza.png', bbox_inches='tight')
+        plt.show()
+
+
+def corr_spearman(train):
+    X_num = train.select_dtypes(include='number').drop(columns=['estres_financiero_alto','peso_persona'], errors='ignore')
+
+    correlaciones = X_num.corrwith(train['estres_financiero_alto'], method='spearman').dropna()
+    correlaciones = correlaciones.sort_values(key=abs, ascending=False)
+
+    top_n = min(30, len(correlaciones))
+    top   = correlaciones.head(top_n)
+
+    fig, ax = plt.subplots(figsize=(8, max(5, top_n * 0.32)))
+    colores = [C1 if v >= 0.15 or v <= -0.15 else C0 for v in top.values]
+    bars = ax.barh(top.index[::-1], top.values[::-1], color=colores[::-1], alpha=0.85)
+    ax.axvline(0, color='black', lw=0.8)
+    ax.set_xlabel('Correlación Spearman con estres_financiero_alto')
+    ax.set_title(f'Top {top_n} variables por correlación con el target', fontweight='bold')
+    features_spearman = {col:val for col, val in zip(top.index, top.values) if val >= 0.15 or val <= -0.15}
+    plt.tight_layout()
+    plt.savefig('src/img/eda_correlacion_target.png', bbox_inches='tight')
+    plt.show()
+
+    print('Top 15 correlaciones con el target:')
+    print(correlaciones.head(15).to_string())
+
+    return features_spearman
+
+
+def corr_pearson(train):
+    X_num = train.select_dtypes(include='number').drop(columns=['estres_financiero_alto','peso_persona'], errors='ignore')
+
+    correlaciones = X_num.corrwith(train['estres_financiero_alto'], method='spearman').dropna()
+    correlaciones = correlaciones.sort_values(key=abs, ascending=False)
+
+    top_cols = correlaciones.head(20).index.tolist()
+    top_cols = [c for c in top_cols if c in X_num.columns]
+
+    corr_matrix = X_num[top_cols].corr(method='spearman')
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+    sns.heatmap(
+        corr_matrix,
+        mask=mask,
+        annot=True, fmt='.2f', annot_kws={'size': 7},
+        cmap='RdBu_r', center=0, vmin=-1, vmax=1,
+        linewidths=0.5, ax=ax,
+        cbar_kws={'shrink': 0.8}
+    )
+    ax.set_title('Correlaciones Spearman — top 20 features más correladas con el target',
+                fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('src/img/eda_heatmap_correlaciones.png', bbox_inches='tight')
+    plt.show()
+
+    # Pares con alta multicolinealidad
+    pares_altos = []
+    for i in range(len(corr_matrix)):
+        for j in range(i):
+            r = corr_matrix.iloc[i, j]
+            if abs(r) > 0.70:
+                pares_altos.append((corr_matrix.index[i], corr_matrix.columns[j], round(r, 3)))
+
+    if pares_altos:
+        print(f'Pares con |ρ| > 0.70 (multicolinealidad alta):')
+        for a, b, r in sorted(pares_altos, key=lambda x: abs(x[2]), reverse=True):
+            print(f'  {a:<35} ↔  {b:<35} ρ={r}')
+    else:
+        print('No hay pares con |ρ| > 0.70 entre las top 20 features.')
+
+    return pares_altos
