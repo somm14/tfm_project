@@ -23,6 +23,12 @@ PATH_SILVER_ANALITICO = DATA_DIR_SILVER / 'dataset_analitico.csv'
 PATH_TRAIN_SILVER = DATA_DIR_SILVER / 'train_silver/train_silver.csv'
 PATH_TEST_SILVER = DATA_DIR_SILVER / 'test_silver/test_silver.csv'
 
+PATH_TRAIN_GOLD = DATA_DIR_GOLD / 'train_gold/train_gold.csv'
+PATH_TEST_GOLD = DATA_DIR_GOLD / 'test_gold/test_gold.csv'
+
+PATH_FEAT_NUM = DATA_DIR_GOLD / 'raw/FEATURES_NUM.txt'
+PATH_FEAT_CAT = DATA_DIR_GOLD / 'raw/FEATURES_CAT.txt'
+
 PATH_GOLD_MODELADO = DATA_DIR_GOLD / 'dataset_modelado.csv'
 PATH_GOLD_SPLIT_RAW = DATA_DIR_GOLD / 'raw/'
 
