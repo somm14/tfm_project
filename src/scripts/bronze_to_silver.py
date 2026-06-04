@@ -89,6 +89,10 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     
     return df
 
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────────────────────────────────
+
 def run():
     print("Ejecutando limpieza...")
     sep = '═' * 62
