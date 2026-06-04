@@ -213,6 +213,6 @@ def run():
     print(SEP)
 
     print('\nGuardando modelo...')
-    with open(PATH_MODELS + 'pipeline_final.pkl', 'wb') as f:
+    with open(PATH_MODELS + 'lighgbm_grid.pkl', 'wb') as f:
         pickle.dump(lg_optimo, f)
     print('Modelo guardado con éxito')

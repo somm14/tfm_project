@@ -12,7 +12,7 @@ def main():
     print('\nLimpieza finalizada.')
 
     run_modelo()
-    
+
     print('\nPipeline finalizado')
 
 if __name__ == '__main__':
