@@ -14,12 +14,6 @@ Flujo
   4. pipeline.transform() → nunca .fit()
   5. Predice: probabilidad + clase binaria con el umbral óptimo
   6. Exporta CSV con score_riesgo, clase predicha y nivel_riesgo
-
-Uso
-───
-  python modelo_produccion.py                         # sobre test_silver.csv
-  python modelo_produccion.py --input ruta/datos.csv  # sobre otro fichero
-  python modelo_produccion.py --umbral 0.35           # forzar umbral manual
 '''
 
 import os
@@ -53,13 +47,25 @@ from lightgbm import LGBMClassifier
 TARGET = 'estres_financiero_alto'
 SEP    = '═' * 62
 RANDOM_STATE = 42
-FEATURES_DEL = ['motivo_aumento_ingresos', 'motivo_disminucion_ingresos', 
-                'id_hogar', 'id_persona', 'region', 'capacidad_fin_de_mes', 
-                'capacidad_gastos_imprevistos', 'retrasos_facturas', 
-                'retrasos_hipoteca_alquiler', 'retrasos_deudas_no_vivienda'
-                ]
-
 MEJOR_MODELO = 'LightGBM'
+
+# FEATURES_DEL = ['motivo_aumento_ingresos', 'motivo_disminucion_ingresos', 
+#                 'id_hogar', 'id_persona', 'region', 'capacidad_fin_de_mes', 
+#                 'capacidad_gastos_imprevistos', 'retrasos_facturas', 
+#                 'retrasos_hipoteca_alquiler', 'retrasos_deudas_no_vivienda'
+#                 ]
+
+FEATURES_IMPORT = [
+    "edad", "nivel_estudios", "tipo_contrato", "jornada", "anios_experiencia",
+    "renta_neta_salarial", "regimen_tenencia", "cuota_hipoteca", "importe_alquiler",
+    "gastos_vivienda", "renta_neta_hogar", "num_miembros_hogar",
+    "carga_prestamos_no_vivienda", "tipo_hogar", "puede_proteina_2dias",
+    "puede_vacaciones", "puede_sustituir_muebles", "puede_calefaccion_invierno",
+    "ratio_carga_vivienda", "ocupacion_isco08", "renta_hogar_per_capita",
+    "num_habitaciones", "carga_asistencia_dental", "carga_medicamentos",
+    "hogar_carencia_material", "cambio_ingresos_12m", "unidades_consumo",
+    "renta_no_monetaria_salarial", "horas_semana", "expectativa_ingresos_12m",
+]
 
 PARAMS_GS_F1 = {
     'learning_rate': 0.2,
@@ -156,17 +162,17 @@ def run():
     train, test = carga_datos_silver()
     print('Carga completada')
 
-    FEATURES_DEL.append(TARGET)
-    X_train_raw = train.drop(FEATURES_DEL, axis=1) # Se eliminan por alto porcentaje de nulos
+    # FEATURES_DEL.append(TARGET)
+    X_train_import = train[FEATURES_IMPORT]    
     y_train = train[TARGET].astype(int)
-    X_test_raw = test.drop(FEATURES_DEL, axis=1)
+    X_test_import  = test[FEATURES_IMPORT]
     y_test = test[TARGET].astype(int)
 
-    print(f'\nTrain: {X_train_raw.shape}  |  Test: {X_test_raw.shape}')
+    print(f'\nTrain: {X_train_import.shape}  |  Test: {X_test_import.shape}')
     print(f'Clase 1 en train: {y_train.mean()*100:.1f}%  |  en test: {y_test.mean()*100:.1f}%')
 
-    FEATURES_NUM = [col for col in X_train_raw if X_train_raw[col].dtypes in [int,float]]
-    FEATURES_CAT = [col for col in X_train_raw if col not in FEATURES_NUM]
+    FEATURES_NUM = [col for col in FEATURES_IMPORT if X_train_import[col].dtypes in [int,float]]
+    FEATURES_CAT = [col for col in X_train_import if col not in FEATURES_IMPORT]
 
     print('\n',SEP)
     print('PASO 1: ENTRENAMIENTO')
@@ -181,22 +187,27 @@ def run():
           - 'n_estimators':  100,
           - 'num_leaves':    63
           - 'class_weight': 'balanced'
+        
+    Métricas esperadas en test:
+          - ROC-AUC:          0.9590
+          - F1 (estrés alto): 0.8105
+          - Avg Precision:    0.8671
     ''')
 
     print('\nEntrenando...')
 
     lg = LGBMClassifier(
-    **PARAMS_GS_F1,
-    class_weight='balanced',
-    random_state=42,
-    n_jobs=-1,
-    verbose=-1,
+        **PARAMS_GS_F1,
+        class_weight='balanced',
+        random_state=42,
+        n_jobs=-1,
+        verbose=-1,
     )
     
-    lg_optimo = construir_pipeline_completo(
+    lg_import = construir_pipeline_completo(
         lg, FEATURES_NUM, FEATURES_CAT
     )
-    lg_optimo.fit(X_train_raw, y_train)
+    lg_import.fit(X_train_import, y_train)
     
     print('Entrenamiento finalizado')
 
@@ -205,7 +216,7 @@ def run():
     print(SEP)
 
     print('\nEvaluando sobre test...')
-    evaluacion_test(lg_optimo, X_test_raw, y_test)
+    evaluacion_test(lg_import, X_test_import, y_test)
     print('Evaluación finalizada')
 
     print(f'\n{SEP}')
@@ -213,6 +224,6 @@ def run():
     print(SEP)
 
     print('\nGuardando modelo...')
-    with open(PATH_MODELS + 'lighgbm_grid.pkl', 'wb') as f:
-        pickle.dump(lg_optimo, f)
+    with open(PATH_MODELS + 'lg_optimo.pkl', 'wb') as f:
+        pickle.dump(lg_import, f)
     print('Modelo guardado con éxito')
