@@ -3,17 +3,11 @@ modelo_produccion.py
 ====================
 Script end-to-end de producción para el Modelo 1 (estrés financiero — ECV 2025).
 
-Carga pipeline_final.pkl (preprocesado + LightGBM ya entrenados) y ejecuta
-la predicción sobre nuevos datos sin reentrenar nada.
-
 Flujo
 ─────
-  1. Carga metadata.json   → modelo, umbral óptimo, parámetros
-  2. Carga pipeline_final.pkl → preprocesado + LightGBM ajustados sobre train
-  3. Lee el CSV de entrada
-  4. pipeline.transform() → nunca .fit()
-  5. Predice: probabilidad + clase binaria con el umbral óptimo
-  6. Exporta CSV con score_riesgo, clase predicha y nivel_riesgo
+  1. Lee el CSV de entrada
+  2. Entrenamiento con el modelo óptimo obtenido a través del notebook 02_modelado.ipynb
+  3. Exportación del modelo
 '''
 
 import os
@@ -49,12 +43,6 @@ SEP    = '═' * 62
 RANDOM_STATE = 42
 MEJOR_MODELO = 'LightGBM'
 
-# FEATURES_DEL = ['motivo_aumento_ingresos', 'motivo_disminucion_ingresos', 
-#                 'id_hogar', 'id_persona', 'region', 'capacidad_fin_de_mes', 
-#                 'capacidad_gastos_imprevistos', 'retrasos_facturas', 
-#                 'retrasos_hipoteca_alquiler', 'retrasos_deudas_no_vivienda'
-#                 ]
-
 FEATURES_IMPORT = [
     "edad", "nivel_estudios", "tipo_contrato", "jornada", "anios_experiencia",
     "renta_neta_salarial", "regimen_tenencia", "cuota_hipoteca", "importe_alquiler",
@@ -85,16 +73,21 @@ def carga_datos_silver():
     test = pd.read_csv(PATH_TEST_SILVER,  low_memory=False)
     return train, test
 
+class Log1pRentas:                                               
+                                                          
+    def __init__(self, idx_log):                                  
+        self.idx_log = idx_log                                    
 
-def log1p_rentas(X):
-    X = X.copy().astype(float)
-    X[:, IDX_LOG] = np.log1p(np.clip(X[:, IDX_LOG], 0, None))
-    return X
+    def __call__(self, X):                                        
+        X = X.copy().astype(float)                                
+        X[:, self.idx_log] = np.log1p(                           
+            np.clip(X[:, self.idx_log], 0, None))                 
+        return X
 
 
 def construir_preprocessor(cols_num, cols_cat):
-    global IDX_LOG
-    IDX_LOG = [cols_num.index(c) for c in COLS_LOG1P if c in cols_num]
+    idx_log = [cols_num.index(c) for c in COLS_LOG1P if c in cols_num]
+    log1p_rentas = Log1pRentas(idx_log)
 
     cols_ord = [c for c in cols_cat if c in ORDINAL_VARS]
     cols_nom = [c for c in cols_cat if c not in ORDINAL_VARS]
@@ -162,7 +155,6 @@ def run():
     train, test = carga_datos_silver()
     print('Carga completada')
 
-    # FEATURES_DEL.append(TARGET)
     X_train_import = train[FEATURES_IMPORT]    
     y_train = train[TARGET].astype(int)
     X_test_import  = test[FEATURES_IMPORT]
