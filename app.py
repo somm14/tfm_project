@@ -74,7 +74,7 @@ h3 { font-family: "DM Serif Display", sans-serif !important; font-weight: 600 !i
 .section-divider { height: 3px; background: linear-gradient(90deg, #0ea5e9, transparent); border-radius: 2px; margin: 24px 0 32px 0; }
 
 .info-box { background: #1d3240; border: 1px solid #bae6fd; border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
-.warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
+.warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 18px 20px; margin: 16px 0; color:#05213d;}
 .privacy-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 24px; margin: 20px 0; }
 .consent-box { background: #fafafa; border: 1px solid #d1d5db; border-radius: 10px; padding: 20px; margin: 12px 0; font-size: 0.88rem; color: #374151; line-height: 1.7; }
 
@@ -456,8 +456,8 @@ def seccion_contexto():
             </div>""", unsafe_allow_html=True)
         with col4:
             st.markdown("""<div class="metric-card success">
-                <div class="metric-value">+110%</div>
-                <div class="metric-label">Retorno de la inversión (ROI) estimado</div>
+                <div class="metric-value">81%</div>
+                <div class="metric-label">de confianza en aciertos sobre el estrés</div>
             </div>""", unsafe_allow_html=True)
 
         st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
@@ -1106,7 +1106,7 @@ def seccion_cuestionario_empleado():
     st.markdown("---")
     col_btn, _ = st.columns([1, 3])
     with col_btn:
-        evaluar = st.button("🔍 Enviar y obtener resultado", type="primary", use_container_width=True)
+        evaluar = st.button("🔍 Enviar cuestionario", type="primary", use_container_width=True)
 
     if evaluar:
         # Construcción del dict de features
