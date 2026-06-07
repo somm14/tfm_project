@@ -34,6 +34,15 @@ PATH_GOLD_SPLIT_RAW = DATA_DIR_GOLD / 'raw/'
 
 
 # Constantes para el dataset de modelado
+
+FEATURES_DEL = [
+    'motivo_aumento_ingresos', 'motivo_disminucion_ingresos',
+    'id_hogar', 'id_persona', 'region',
+    'capacidad_fin_de_mes', 'capacidad_gastos_imprevistos',
+    'retrasos_facturas', 'retrasos_hipoteca_alquiler',
+    'retrasos_deudas_no_vivienda', 'estres_financiero_alto', 'peso_persona',
+]
+
 COLS_AUX = ['estres_financiero_alto', 'peso_persona']
 COLS_LOG1P = [
     'renta_neta_salarial', 'renta_no_monetaria_salarial', 'renta_neta_hogar',
