@@ -40,6 +40,9 @@ html, body, [class*="css"] { font-family: "DM Sans", sans-serif; }
 [data-testid="stSidebar"] * { color: #e8edf2 !important; }
 [data-testid="stSidebar"] .stRadio label { font-size: 0.9rem; padding: 6px 0; letter-spacing: 0.02em; }
 
+[data-testid="InputInstructions"]  { display:none; }
+
+            
 h1 { font-family: "DM Serif Display", serif !important; color: #506478 !important; font-size: 2.4rem !important; letter-spacing: -0.01em; }
 h2 { font-family: "DM Serif Display", serif !important; color: #5898db !important; font-size: 1.7rem !important; }
 h3 { font-family: "DM Serif Display", sans-serif !important; font-weight: 600 !important; color: #5898db !important; }
@@ -80,7 +83,7 @@ h3 { font-family: "DM Serif Display", sans-serif !important; font-weight: 600 !i
 .budget-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .budget-table th { background: #0f1923; color: white; padding: 12px 16px; text-align: left; font-weight: 500; letter-spacing: 0.04em; }
 .budget-table td { padding: 11px 16px; border-bottom: 1px solid #e5e7eb; }
-.budget-table tr:nth-child(even) td { background: #f8fafc; }
+.budget-table tr:nth-child(even) td { background: #f8fafc; color: #282a2e}
 .budget-table tr:last-child td { font-weight: 700; background: #f0f9ff; border-top: 2px solid #0ea5e9; }
 
 .sidebar-logo { font-family: "DM Serif Display", serif; font-size: 1.6rem; color: white; margin-bottom: 4px; }
@@ -280,23 +283,73 @@ MAPEO_SECTOR = {
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SIMULACIÓN BBDD CORPORATIVA — salario neto anual
-# En producción se sustituiría por una query a la BBDD de nóminas.
+# Basado en medianas reales de la ECV 2025 (salarios_ocupacion.csv),
+# segmentadas por grupo ISCO-08 (2 dígitos), jornada y tipo de contrato.
 # Genera un valor determinista (reproducible para el mismo ID).
 # ─────────────────────────────────────────────────────────────────────────────
-def salario_simulado(emp_id: str, ocupacion_isco08, antiguedad: int) -> float:
-    base_por_ocupacion = {
-        11: 52000, 25: 38000, 31: 28000, 41: 22000,
-        51: 18000, 72: 24000, 83: 20000, 91: 16000, 61: 17000,
-    }
+
+@st.cache_data
+def _cargar_medianas_salario() -> pd.DataFrame:
+    """
+    Lee salarios_ocupacion.csv y devuelve la mediana de renta_neta_salarial
+    agrupada por (grupo_isco, jornada, contrato_tipo).
+    grupo_isco: primer dígito del código ISCO-08 × 10 → coincide con MAPEO_SECTOR
+                (ej. códigos 11-19 → grupo 10, códigos 21-29 → grupo 20…).
+    contrato_tipo: 'indefinido' | 'temporal'.
+    """
+    df = pd.read_csv('src/data/02_silver/train_silver/salarios_ocupacion.csv')
+    df['grupo_isco'] = (df['ocupacion_isco08'] // 10).astype('Int64') * 10
+    df['contrato_tipo'] = np.where(
+        df['tipo_contrato'].str.lower().str.startswith('indefinido', na=False),
+        'indefinido', 'temporal'
+    )
+    return (
+        df.groupby(['grupo_isco', 'jornada', 'contrato_tipo'])['renta_neta_salarial']
+        .median()
+        .reset_index()
+    )
+
+_medianas_sal = _cargar_medianas_salario()
+
+def salario_simulado(emp_id: str, ocupacion_isco08, antiguedad: int,
+                     jornada: str = "Tiempo completo",
+                     tipo_contrato: str = "Indefinido") -> float:
+    """
+    Estima la renta neta salarial anual usando la mediana real del CSV (ECV 2025),
+    filtrada por grupo ISCO-08 (decena), jornada y tipo de contrato.
+    Aplica una variación determinista ±10 % según emp_id y un ajuste por antigüedad.
+    Si no hay datos para la combinación exacta, usa la mediana del grupo ISCO.
+    """
     try:
         isco = int(float(ocupacion_isco08))
     except (ValueError, TypeError):
         isco = 91
-    base = base_por_ocupacion.get(isco, 22000)
-    factor_antiguedad = 1 + min(int(antiguedad) * 0.01, 0.25)
-    seed = sum(ord(c) for c in str(emp_id)) % 100
-    variacion = 1 + (seed - 50) / 500
-    return round(base * factor_antiguedad * variacion, 0)
+
+    grupo = (isco // 10) * 10  # 11 → 10, 25 → 20, 91 → 90…
+
+    jornada_key  = "Tiempo parcial" if "parcial" in str(jornada).lower() else "Tiempo completo"
+    contrato_key = "temporal" if "temporal" in str(tipo_contrato).lower() else "indefinido"
+
+    mask = (
+        (_medianas_sal['grupo_isco']    == grupo) &
+        (_medianas_sal['jornada']       == jornada_key) &
+        (_medianas_sal['contrato_tipo'] == contrato_key)
+    )
+    fila = _medianas_sal.loc[mask, 'renta_neta_salarial']
+
+    if fila.empty:
+        # Fallback: mediana del grupo ISCO sin filtrar jornada/contrato
+        fila = _medianas_sal.loc[_medianas_sal['grupo_isco'] == grupo, 'renta_neta_salarial']
+
+    mediana = float(fila.iloc[0]) if not fila.empty else 18000.0
+
+    # Variación determinista ±10 % según emp_id
+    seed      = sum(ord(c) for c in str(emp_id)) % 100   # 0-99
+    variacion = 1 + (seed - 50) / 500                    # 0.90 – 1.10
+    # Ajuste por antigüedad: +0.8 % por año, máximo +15 %
+    factor_antiguedad = 1 + min(int(antiguedad) * 0.008, 0.15)
+
+    return round(mediana * variacion * factor_antiguedad, 0)
 # ─────────────────────────────────────────────────────────────────────────────
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -317,7 +370,7 @@ def pantalla_login():
     with col_c:
         st.markdown("""
         <div style="text-align:center; margin-bottom: 32px; padding-top: 40px;">
-            <div style="font-family:'DM Serif Display',serif; font-size:2.4rem; color:#0f1923; font-weight:700;">
+            <div style="font-family:'DM Serif Display',serif; font-size:2.4rem; color:#1b4b7a; font-weight:700;">
                 FinWellsor
             </div>
             <div style="font-size:0.8rem; color:#94a3b8; letter-spacing:0.12em; text-transform:uppercase; margin-top:4px;">
@@ -446,7 +499,7 @@ def seccion_contexto():
                 <div style="display:flex; align-items:flex-start; margin-bottom:18px;">
                     <span class="step-num">{i}</span>
                     <div>
-                        <strong style="color:#0f1923;">{paso[0]}</strong><br>
+                        <strong style="color:#0d4f91;">{paso[0]}</strong><br>
                         <span style="color:#64748b; font-size:0.88rem;">{paso[1]}</span>
                     </div>
                 </div>
@@ -522,7 +575,7 @@ def seccion_contexto():
                 <div style="display:flex; align-items:flex-start; margin-bottom:18px;">
                     <span class="step-num">{i}</span>
                     <div>
-                        <strong style="color:#0f1923;">{paso[0]}</strong><br>
+                        <strong style="color:#0d4f91;">{paso[0]}</strong><br>
                         <span style="color:#64748b; font-size:0.88rem;">{paso[1]}</span>
                     </div>
                 </div>
@@ -853,7 +906,7 @@ def seccion_eda():
         st.markdown("""
         <div style="background:#fef2f2; border-radius:14px; padding:20px; border-top:4px solid #ef4444;">
             <div style="font-size:1.5rem; margin-bottom:8px;">⚠️</div>
-            <strong>Perfil de mayor riesgo</strong>
+            <strong style="color:#0e47a1;">Perfil de mayor riesgo</strong>
             <ul style="font-size:0.88rem; color:#374151; margin-top:8px; padding-left:18px;">
                 <li>Jornada parcial</li>
                 <li>Renta neta anual por debajo de 18.000 €/año</li>
@@ -865,7 +918,7 @@ def seccion_eda():
         st.markdown("""
         <div style="background:#fffbeb; border-radius:14px; padding:20px; border-top:4px solid #f59e0b;">
             <div style="font-size:1.5rem; margin-bottom:8px;">🔶</div>
-            <strong>Perfil de riesgo medio</strong>
+            <strong style="color:#0e47a1;">Perfil de riesgo medio</strong>
             <ul style="font-size:0.88rem; color:#374151; margin-top:8px; padding-left:18px;">
                 <li>Contrato indefinido pero con hipoteca elevada</li>
                 <li>Renta neta anual entre 18.000 y 24.000 €/año</li>
@@ -877,7 +930,7 @@ def seccion_eda():
         st.markdown("""
         <div style="background:#f0fdf4; border-radius:14px; padding:20px; border-top:4px solid #10b981;">
             <div style="font-size:1.5rem; margin-bottom:8px;">✅</div>
-            <strong>Perfil de bajo riesgo</strong>
+            <strong style="color:#0e47a1;">Perfil de bajo riesgo</strong>
             <ul style="font-size:0.88rem; color:#374151; margin-top:8px; padding-left:18px;">
                 <li>Contrato indefinido a tiempo completo</li>
                 <li>Renta familiar por encima de 29.000 €/año</li>
@@ -1074,7 +1127,7 @@ def seccion_cuestionario_empleado():
             "jornada": tipo_jornada,
             "horas_semana": horas_semana,
             "anios_experiencia": antiguedad,
-            "renta_neta_salarial": salario_simulado(emp_id, MAPEO_SECTOR.get(sector, 91), antiguedad),  # simulado BBDD corporativa
+            "renta_neta_salarial": salario_simulado(emp_id, MAPEO_SECTOR.get(sector, 91), antiguedad, tipo_jornada, tipo_contrato),  # simulado BBDD corporativa
             "expectativa_ingresos_12m": expectativa_ingresos,
             "ocupacion_isco08": MAPEO_SECTOR.get(sector, np.nan),
             "regimen_tenencia": MAPEO_VIVIENDA.get(tipo_vivienda, np.nan),
@@ -1121,7 +1174,7 @@ def seccion_cuestionario_empleado():
         """, unsafe_allow_html=True)
 
         # Generar CSV de respuestas
-        salario_anual = salario_simulado(emp_id, MAPEO_SECTOR.get(sector, 91), antiguedad)
+        salario_anual = salario_simulado(emp_id, MAPEO_SECTOR.get(sector, 91), antiguedad, tipo_jornada, tipo_contrato)
         fila_csv = {
             "id_empleado": emp_id,
             "nombre_firma": nombre_firma,
