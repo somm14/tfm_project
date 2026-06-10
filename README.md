@@ -347,6 +347,6 @@ Esto valida tanto el diseño del target (≥2 de 5 condiciones simultáneas) com
 
 ---
 
-*TFM · Máster de Data Science · ECV 2025 (INE)*
-*Elaborado por Soraya Malpica Montes*
+*TFM · Máster de Data Science · ECV 2025 (INE)*  
+*Elaborado por Soraya Malpica Montes*  
 ***LinkedIn** → https://www.linkedin.com/in/sorayamm/*
