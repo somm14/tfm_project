@@ -30,6 +30,9 @@ st.set_page_config(
 st.markdown('''
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css');
+@import url('https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css');
+@import url('https://unpkg.com/@phosphor-icons/web@2.1.1/src/thin/style.css');
 
 html, body, [class*="css"] { font-family: "DM Sans", sans-serif; }
 
@@ -467,8 +470,10 @@ def seccion_contexto():
             st.markdown('## El Problema')
             st.markdown('''
             El **estrés financiero** es uno de los principales factores ocultos de pérdida de rendimiento
-            en las organizaciones. A diferencia de otros indicadores de bienestar, es difícil de detectar
-            porque los empleados raramente lo comunican de forma directa.
+            en las organizaciones. El informe *State of the Workplace* de SHRM lo señala como la
+            **principal preocupación de los trabajadores**, y su impacto va más allá del ámbito personal:
+            se infiltra en la jornada laboral afectando la concentración, la toma de decisiones y las
+            relaciones de equipo ([SHRM, 2025](https://www.shrm.org/topics-tools/flagships/hr-daily/why-financial-wellness-is-now-an-employee-experience-issue)).
 
             Las consecuencias son tangibles:
             - Mayor absentismo y rotación no deseada
@@ -476,6 +481,10 @@ def seccion_contexto():
             - Deterioro del clima laboral y de las relaciones de equipo
             - Costes de sustitución cuando el talento abandona la empresa
 
+            Con el impacto acumulado de la inflación, hitos como comprar una vivienda o planificar
+            la jubilación se han retrasado drásticamente para muchos empleados. Casi el **49% de los
+            trabajadores** cree que su salario jamás alcanzará el coste de vida actual
+            ([SHRM, 2025](https://www.shrm.org/topics-tools/news/benefits-compensation/workers-say-pay-isnt-keeping-up-with-cost-of-living)).
             Los departamentos de RRHH necesitan **anticiparse**, no reaccionar.
             ''')
             st.markdown('## La Solución')
@@ -504,7 +513,7 @@ def seccion_contexto():
                     </div>
                 </div>
                 ''', unsafe_allow_html=True)
-            st.markdown('<div class="info-box">📌 <strong>Fuente de datos:</strong> Encuesta de Condiciones de Vida (INE), edición 2025. Muestra representativa a nivel nacional.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box"><i class="ph ph-map-pin-simple"></i> <strong>Fuente de datos:</strong> Encuesta de Condiciones de Vida (INE), edición 2025. Muestra representativa a nivel nacional.</div>', unsafe_allow_html=True)
 
     else:
         # Vista Empleado: métricas y texto orientados al bienestar personal
@@ -592,7 +601,7 @@ def seccion_usuarios_valor():
     with col1:
         st.markdown("""
         <div style="background:#f8fafc; border-radius:14px; padding:28px; border-top:4px solid #0ea5e9;">
-            <div style="font-size:2.4rem; margin-bottom:12px;">👩‍💼</div>
+            <div style="font-size:2.4rem; margin-bottom:12px;"><i class="ph ph-person" style="color:#1f2d3b;"></i></div>
             <h3 style="margin-top:0;">Business Partner de RRHH</h3>
             <p style="color:#64748b; font-size:0.9rem;">Detectar colectivos en riesgo antes de que el problema se materialice en baja o renuncia.</p>
             <strong style="color:#0ea5e9; font-size:0.82rem; text-transform:uppercase;">Valor obtenido</strong>
@@ -601,7 +610,7 @@ def seccion_usuarios_valor():
     with col2:
         st.markdown("""
         <div style="background:#f8fafc; border-radius:14px; padding:28px; border-top:4px solid #10b981;">
-            <div style="font-size:2.4rem; margin-bottom:12px;">🧑‍⚕️</div>
+            <div style="font-size:2.4rem; margin-bottom:12px;"><i class="ph ph-heart-straight" style="color:#1f2d3b;"></i></div>
             <h3 style="margin-top:0;">Técnico de Bienestar</h3>
             <p style="color:#64748b; font-size:0.9rem;">Identificar empleados que podrían beneficiarse de asistencia financiera o asesoramiento.</p>
             <strong style="color:#10b981; font-size:0.82rem; text-transform:uppercase;">Valor obtenido</strong>
@@ -610,7 +619,7 @@ def seccion_usuarios_valor():
     with col3:
         st.markdown("""
         <div style="background:#f8fafc; border-radius:14px; padding:28px; border-top:4px solid #f59e0b;">
-            <div style="font-size:2.4rem; margin-bottom:12px;">📊</div>
+            <div style="font-size:2.4rem; margin-bottom:12px;"><i class="ph ph-chart-bar" style="color:#1f2d3b;"></i></div>
             <h3 style="margin-top:0;">Director de RRHH</h3>
             <p style="color:#64748b; font-size:0.9rem;">Justificar la inversión en bienestar financiero con datos cuantificables.</p>
             <strong style="color:#f59e0b; font-size:0.82rem; text-transform:uppercase;">Valor obtenido</strong>
@@ -626,7 +635,7 @@ def seccion_usuarios_valor():
             ("🟡 Análisis automático", "Los datos se procesan en esta plataforma. En minutos, RRHH tiene el mapa de riesgo de toda la plantilla."),
             ("🟠 Priorización", "El equipo identifica los colectivos de mayor riesgo (por área, contrato, tramo salarial…)."),
             ("🟢 Intervención", "Se activan programas específicos: asesoramiento financiero, anticipos de nómina, formación en finanzas personales."),
-            ("🔁 Seguimiento", "Se mide el impacto en la siguiente edición. El modelo aprende con los nuevos datos."),
+            ("⇆ Seguimiento", "Se mide el impacto en la siguiente edición. El modelo aprende con los nuevos datos."),
         ]:
             st.markdown(f"""
             <div style="display:flex; gap:16px; margin-bottom:14px; align-items:flex-start;">
@@ -640,7 +649,7 @@ def seccion_usuarios_valor():
         st.markdown("""
         <div class="warn-box">
             <span style="color:#1f4478;">
-            <strong>⚖️ Privacidad y ética</strong><br><br>
+            <strong><i class="ph ph-scales" style="color:#1f2d3b;"></i> Privacidad y ética</strong><br><br>
             <span style="font-size:0.88rem; color:#64748b;">
             Esta herramienta está diseñada para ser usada de forma <strong>agregada y anónima</strong>.
             Las predicciones individuales solo deben activarse con consentimiento explícito del empleado.<br><br>
@@ -679,7 +688,7 @@ def seccion_eda():
 
     st.markdown("""
     <div class="info-box">
-        📋 <strong>¿De dónde vienen estos datos?</strong><br>
+        <i class="ph-light ph-database"></i> <strong>¿De dónde vienen estos datos?</strong><br>
         El análisis se basa en la <strong>Encuesta de Condiciones de Vida 2025</strong> del INE,
         centrada en trabajadores asalariados de la Comunidad de Madrid.
         Los resultados reflejan patrones reales del mercado laboral madrileño y sirven
@@ -692,7 +701,7 @@ def seccion_eda():
     # ═══════════════════════════════════════════════════════════════
     # INSIGHT 1 — ¿Cuántos trabajadores están en riesgo?
     # ═══════════════════════════════════════════════════════════════
-    st.markdown("## 👥 1 de cada 6 trabajadores madrileños tiene estrés financiero elevado")
+    st.markdown("## <i class='ph-light ph-users'></i> 1 de cada 6 trabajadores madrileños tiene estrés financiero elevado", unsafe_allow_html=True)
     col_txt, col_chart = st.columns([2, 2], gap="large")
 
     with col_txt:
@@ -736,7 +745,7 @@ def seccion_eda():
     # ═══════════════════════════════════════════════════════════════
     # INSIGHT 2 — Ingresos: el factor más determinante
     # ═══════════════════════════════════════════════════════════════
-    st.markdown("## 💶 Los ingresos son el principal factor de riesgo")
+    st.markdown("## <i class='ph-light ph-money'></i> Los ingresos son el principal factor de riesgo", unsafe_allow_html=True)
     col_txt2, col_chart2 = st.columns([2, 2], gap="large")
 
     with col_txt2:
@@ -775,7 +784,7 @@ def seccion_eda():
     # ═══════════════════════════════════════════════════════════════
     # INSIGHT 3 — Tipo de contrato y jornada
     # ═══════════════════════════════════════════════════════════════
-    st.markdown("## 📋 El tipo de jornada marca la diferencia")
+    st.markdown("## <i class='ph-light ph-address-book'></i> El tipo de jornada marca la diferencia", unsafe_allow_html=True)
 
     col_chart3, col_txt3 = st.columns([2, 2], gap="large")
 
@@ -815,7 +824,7 @@ def seccion_eda():
     # ═══════════════════════════════════════════════════════════════
     # INSIGHT 4 — Vivienda y carga del hogar
     # ═══════════════════════════════════════════════════════════════
-    st.markdown("## 🏠 El alquiler de mercado: el mayor factor de presión sobre el hogar")
+    st.markdown("## <i class='ph-light ph-house-line'></i> El alquiler de mercado: el mayor factor de presión sobre el hogar", unsafe_allow_html=True)
 
     col_txt4, col_chart4 = st.columns([2, 2], gap="large")
 
@@ -856,7 +865,7 @@ def seccion_eda():
     # ═══════════════════════════════════════════════════════════════
     # INSIGHT 5 — Privación material: señales de alerta
     # ═══════════════════════════════════════════════════════════════
-    st.markdown("## 🚨 Cuando no se puede permitir lo básico, el riesgo se dispara")
+    st.markdown("## <i class='ph-light ph-siren'></i> Cuando no se puede permitir lo básico, el riesgo se dispara", unsafe_allow_html=True)
 
     col_chart5, col_txt5 = st.columns([2, 2], gap="large")
 
@@ -900,7 +909,7 @@ def seccion_eda():
 
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-    st.markdown("## 📌 Resumen: ¿qué perfil tiene más riesgo?")
+    st.markdown("## <i class='ph-light ph-push-pin'></i> Resumen: ¿qué perfil tiene más riesgo?", unsafe_allow_html=True)
     col_r1, col_r2, col_r3 = st.columns(3, gap="large")
     with col_r1:
         st.markdown("""
@@ -1367,7 +1376,7 @@ def seccion_respuestas_rrhh():
 
     with tab2:
         st.markdown("### Carga masiva de respuestas para predicción")
-        st.markdown('<div class="warn-box">⚠️ El CSV debe contener las columnas del modelo. Usa la plantilla de la pestaña anterior como referencia.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="warn-box"><i class="ph-light ph-warning"></i> El CSV debe contener las columnas del modelo. Usa la plantilla de la pestaña anterior como referencia.</div>', unsafe_allow_html=True)
         archivo = st.file_uploader("Sube el CSV con respuestas de empleados", type=["csv"])
         if archivo:
             df_carga = pd.read_csv(archivo, low_memory=False)
@@ -1390,13 +1399,17 @@ def seccion_presupuesto():
     st.markdown("*Justificación económica de la inversión en bienestar financiero*")
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
+     # ── BLOQUE 1: Calculadora ROI ──────────────────────────────────────────
     col_left, col_right = st.columns([3, 2], gap="large")
     with col_left:
-        st.markdown("## Supuestos del modelo de ROI")
+        st.markdown("## 🧮 Calculadora de ROI")
         plantilla = st.number_input("Tamaño de plantilla", min_value=50, max_value=50000, value=500, step=50)
-        pct_riesgo = st.slider("% de empleados con riesgo Alto estimado", 5, 40, 17)
-        coste_rotacion = st.number_input("Coste medio de reposición por baja (€)", min_value=5000, max_value=80000, value=30000, step=1000)
-        pct_retencion = st.slider("% de bajas prevenibles con el programa", 10, 60, 25)
+        pct_riesgo = st.slider("% de empleados con riesgo Alto estimado", 5, 40, 17,
+            help="Estimado a partir de la ECV 2025 (INE): ~15,8 % de asalariados en Madrid presentan estrés financiero alto.")
+        coste_rotacion = st.number_input("Coste medio de reposición por baja (€)", min_value=5000, max_value=80000, value=30000, step=1000,
+            help="Basado en SHRM (2023) y Gallup (2024): entre 6-9 meses de salario. Para salario medio Madrid ~30.000 € brutos → coste estimado 25.000–40.000 €.")
+        pct_retencion = st.slider("% de bajas prevenibles con el programa", 10, 60, 25,
+            help="Work Institute (2025): 75% de la rotación voluntaria es prevenible. PwC (2023): 1 de cada 3 empleados que se fue lo hizo por estrés financiero. Valor conservador recomendado: 20-30%.")
         coste_programa = st.number_input("Coste anual del programa de bienestar (€)", min_value=1000, max_value=500000, value=30000, step=1000)
 
         n_riesgo = int(plantilla * pct_riesgo / 100)
@@ -1408,15 +1421,22 @@ def seccion_presupuesto():
         <table class="budget-table">
             <tr><th>Concepto</th><th>Valor</th></tr>
             <tr><td>Empleados en riesgo Alto estimados</td><td>{n_riesgo:,}</td></tr>
-            <tr><td>Bajas evitadas con el programa</td><td>{n_bajas_evitadas:,}</td></tr>
+            <tr><td>Bajas voluntarias evitadas con el programa</td><td>{n_bajas_evitadas:,}</td></tr>
             <tr><td>Ahorro por rotación evitada</td><td>{ahorro_rotacion:,.0f} €</td></tr>
             <tr><td>Coste del programa</td><td>{coste_programa:,.0f} €</td></tr>
             <tr><td>ROI estimado del programa</td><td>{roi:.0f}%</td></tr>
         </table>
         """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="warn-box" style="font-size:0.82rem; color:#92400e;">
+            <i class="ph-light ph-warning"></i> <strong>Nota metodológica:</strong> El ROI refleja únicamente el ahorro por rotación evitada.
+            No incluye beneficios adicionales como reducción del absentismo, mejora de productividad
+            ni reducción de bajas por incapacidad temporal — lo que hace el estimado <em>conservador</em>.
+        </div>
+        """, unsafe_allow_html=True)
 
     with col_right:
-        st.markdown("## ¿Qué incluye el programa?")
+        st.markdown("## 📋 ¿Qué incluye el programa?")
         st.markdown("""
         - 🧑‍💼 **Asesoramiento financiero individual** (externo, confidencial)
         - 📚 Talleres de **finanzas personales** y gestión del presupuesto familiar
@@ -1427,12 +1447,147 @@ def seccion_presupuesto():
         """)
         st.markdown("""
         <div class="info-box">
-            💡 <strong>Referencia de mercado:</strong> Según estudios de Mercer y PwC, cada euro invertido
-            en programas de bienestar financiero genera entre 1,5 y 3 euros de retorno medible en productividad
-            y reducción de rotación.
+            💡 <strong>Referencia de mercado:</strong> Según PwC (2023), los empleados con estrés financiero
+            tienen el doble de probabilidad de buscar otro empleo. Mercer (2022) señala que las organizaciones
+            con estrategia de bienestar financiero puntúan un 30% mejor en retención que las que no la tienen.
         </div>
         """, unsafe_allow_html=True)
 
+    # ── BLOQUE 2: Desglose del coste de reposición ────────────────────────
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("## 📊 ¿De dónde sale ese coste de reposición?")
+    st.markdown("""
+    <p style="color:#64748b; font-size:0.95rem; margin-bottom:20px;">
+        Según <strong>SHRM</strong> (Society for Human Resource Management) y <strong>Gallup</strong>,
+        reemplazar a un empleado cuesta entre el <strong>50% y el 200% de su salario anual</strong>,
+        dependiendo del nivel del puesto. Para un perfil medio en Madrid (~30.000 € brutos/año),
+        el coste se desglosa así:
+    </p>
+    """, unsafe_allow_html=True)
+
+    col_d1, col_d2, col_d3 = st.columns(3, gap="large")
+    with col_d1:
+        st.markdown("""
+        <div style="background:#fafafa; border-radius:12px; padding:20px; border-top:4px solid #0ea5e9;">
+            <div style="font-size:1.5rem; margin-bottom:6px;">🔍</div>
+            <strong style="color:#0f1923;">Reclutamiento y selección</strong>
+            <p style="color:#64748b; font-size:0.88rem; margin:8px 0 0 0;">
+                Publicación de ofertas, cribado de CVs, entrevistas (RRHH + managers), pruebas técnicas,
+                honorarios de agencia de selección si aplica.
+            </p>
+            <div style="margin-top:14px; font-size:1.3rem; font-weight:700; color:#0ea5e9;">~5.000 – 8.000 €</div>
+            <div style="font-size:0.75rem; color:#94a3b8;">15–25% del coste total</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_d2:
+        st.markdown("""
+        <div style="background:#fafafa; border-radius:12px; padding:20px; border-top:4px solid #f59e0b;">
+            <div style="font-size:1.5rem; margin-bottom:6px;">🎓</div>
+            <strong style="color:#0f1923;">Onboarding y formación</strong>
+            <p style="color:#64748b; font-size:0.88rem; margin:8px 0 0 0;">
+                Formación inicial, tiempo del equipo dedicado a mentoring, materiales, accesos y licencias,
+                coste de errores durante el período de adaptación.
+            </p>
+            <div style="margin-top:14px; font-size:1.3rem; font-weight:700; color:#f59e0b;">~5.000 – 7.000 €</div>
+            <div style="font-size:0.75rem; color:#94a3b8;">15–25% del coste total</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_d3:
+        st.markdown("""
+        <div style="background:#fafafa; border-radius:12px; padding:20px; border-top:4px solid #ef4444;">
+            <div style="font-size:1.5rem; margin-bottom:6px;">📉</div>
+            <strong style="color:#0f1923;">Pérdida de productividad</strong>
+            <p style="color:#64748b; font-size:0.88rem; margin:8px 0 0 0;">
+                Puesto vacante (semanas/meses), sobrecarga del equipo restante, curva de aprendizaje
+                del nuevo empleado (3–9 meses para rendimiento pleno), conocimiento institucional perdido.
+            </p>
+            <div style="margin-top:14px; font-size:1.3rem; font-weight:700; color:#ef4444;">~15.000 – 20.000 €</div>
+            <div style="font-size:0.75rem; color:#94a3b8;">50–65% del coste total · partida más elevada</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:#f0f9ff; border-radius:10px; padding:16px 20px; margin-top:16px;
+                border-left:4px solid #0ea5e9; font-size:0.88rem; color:#1e3a5f;">
+        <strong>Fuentes:</strong>
+        SHRM — <em>The Real Cost of Turnover</em>, 2023 · Gallup — <em>State of the Global Workplace Report</em>, 2024 ·
+        Gallup: "Replacing leaders and managers can cost ~200% of their salary; frontline employees ~40%." ·
+        Josh Bersin (Deloitte): "Cost of replacing an employee: 1.5–2× annual salary."
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── BLOQUE 3: Fuentes bibliográficas ──────────────────────────────────
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("## 📚 Fuentes bibliográficas de esta sección")
+    st.markdown("""
+    <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;">
+        Todos los supuestos del modelo económico están respaldados por estudios de referencia en RRHH y bienestar financiero.
+    </p>
+    """, unsafe_allow_html=True)
+
+    fuentes = [
+        {
+            "icono": "🏛️", "org": "INE — Instituto Nacional de Estadística",
+            "titulo": "Encuesta de Condiciones de Vida (ECV), 2025",
+            "uso": "Fuente primaria del modelo. Origen del dato: ~15,8% de asalariados en Madrid con estrés financiero alto (variable construida).",
+            "url": "https://www.ine.es/dyngs/Prensa/ECV2025.htm",
+            "color": "#0ea5e9"
+        },
+        {
+            "icono": "📘", "org": "PwC — PricewaterhouseCoopers",
+            "titulo": "Employee Financial Wellness Survey, 2023 & 2026",
+            "uso": "El 60% de los empleados reportan estrés financiero (2023). Los empleados estresados financieramente tienen el doble de probabilidad de buscar otro empleo. 1 de cada 3 ha dejado un trabajo por estrés financiero.",
+            "url": "https://www.pwc.com/us/en/services/consulting/human-resources/library/employee-financial-wellness-survey.html",
+            "color": "#dc2626"
+        },
+        {
+            "icono": "🔵", "org": "Mercer",
+            "titulo": "Financial Wellbeing Report, 2022",
+            "uso": "La proporción de organizaciones con estrategia de bienestar financiero se duplicó del 15% (2016) al 36% (2021). Las organizaciones con estrategia clara puntúan un 30% mejor en sus programas que las que no la tienen.",
+            "url": "https://www.mercer.com/en-gb/insights/pensions/defined-contribution-schemes/mercer-financial-wellbeing-report/",
+            "color": "#2563eb"
+        },
+        {
+            "icono": "📗", "org": "SHRM — Society for Human Resource Management",
+            "titulo": "The Real Cost of Turnover, 2023",
+            "uso": "Reemplazar a un empleado cuesta entre el 50% y el 200% de su salario anual. Desglose: reclutamiento, formación y pérdida de productividad. El coste medio por contratación se sitúa en ~4.700 $, con un tiempo medio de cobertura de 42 días.",
+            "url": "https://www.shrm.org/topics-tools/tools/forms/turnover-rate-calculation-spreadsheet",
+            "color": "#16a34a"
+        },
+        {
+            "icono": "🟡", "org": "Gallup",
+            "titulo": "State of the Global Workplace Report, 2024",
+            "uso": "La pérdida de productividad por rotación costó a la economía global 438.000 M$ en 2024. Coste de reposición: 40% del salario en perfiles operativos, hasta 200% en directivos.",
+            "url": "https://www.gallup.com/workplace/349484/state-of-the-global-workplace.aspx",
+            "color": "#d97706"
+        },
+        {
+            "icono": "📙", "org": "Work Institute",
+            "titulo": "Retention Report, 2025",
+            "uso": "El 75% de la rotación voluntaria es prevenible. Fundamento del parámetro '% de bajas prevenibles' del modelo de ROI.",
+            "url": "https://workinstitute.com/retention-reports/",
+            "color": "#7c3aed"
+        },
+    ]
+
+    for f in fuentes:
+        st.markdown(f"""
+        <div style="display:flex; align-items:flex-start; gap:16px; background:white;
+                    border-radius:12px; padding:18px 20px; margin-bottom:12px;
+                    border-left:4px solid {f['color']}; box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+            <div style="font-size:1.8rem; min-width:36px; text-align:center;">{f['icono']}</div>
+            <div style="flex:1;">
+                <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;
+                            letter-spacing:0.08em; margin-bottom:2px;">{f['org']}</div>
+                <div style="font-weight:600; color:#0f1923; font-size:0.95rem; margin-bottom:6px;">{f['titulo']}</div>
+                <div style="font-size:0.87rem; color:#475569; line-height:1.6;">{f['uso']}</div>
+                <a href="{f['url']}" target="_blank"
+                   style="font-size:0.78rem; color:{f['color']}; text-decoration:none; margin-top:6px; display:inline-block;">
+                    🔗 Ver fuente original →
+                </a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECCIÓN LIMITACIONES
@@ -1441,43 +1596,139 @@ def seccion_limitaciones():
     st.markdown("# Limitaciones y Trabajo Futuro")
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
+    st.markdown('<div class="info-box">Toda herramienta tiene un punto de partida. Esta sección explica con honestidad qué resuelve hoy, qué no resuelve todavía, y cuál es el camino de crecimiento previsto.</div>', unsafe_allow_html=True)
+
+# Bloque 1: Limitaciones
+    st.markdown("## <i class='ph ph-warning-circle'></i> Lo que la herramienta no resuelve todavía", unsafe_allow_html=True)
+
     col1, col2 = st.columns(2, gap="large")
     with col1:
-        st.markdown("## ⚠️ Limitaciones actuales")
         st.markdown("""
-        **Fuente de datos:**
-        - La ECV es una encuesta de diseño transversal: no permite inferir causalidad.
-        - Muestra limitada a asalariados en Madrid; la generalización a otras regiones requiere validación.
-        - La variable objetivo (`estres_financiero_alto`) es construida, no directamente declarada por el encuestado.
-
-        **Modelo:**
-        - LightGBM entrenado sobre datos históricos: puede no capturar shocks económicos recientes.
-        - Las variables de renta se reportan con posibles sesgos de deseabilidad social.
-        - Algunas variables clave (`renta_neta_salarial`) requieren integración con BBDD corporativa.
-
-        **Uso:**
-        - La herramienta no sustituye la evaluación clínica ni el diagnóstico profesional.
-        - La predicción individual debe usarse únicamente en marcos de apoyo voluntario y con consentimiento.
-        """)
+        <div class="metric-card warning" style="margin-bottom:16px;">
+            <div class="metric-label">
+                <strong>Cobertura geográfica</strong>
+            </div>
+            <div style="margin-top:10px; font-size:0.93rem; color:#374151; line-height:1.7;">
+                La herramienta trabaja con datos de asalariados en la Comunidad de Madrid en su conjunto,
+                <strong>sin distinción por municipio o distrito</strong>. Las predicciones reflejan tendencias
+                regionales, no la realidad concreta de cada zona.
+            </div>
+        </div>
+        <div class="metric-card info">
+            <div class="metric-label">
+                <strong>Actualización de datos</strong></div>
+            <div style="margin-top:10px; font-size:0.93rem; color:#374151; line-height:1.7;">
+                Los datos corresponden al último ciclo disponible de la Encuesta de Condiciones de Vida.
+                La herramienta <strong>no captura shocks económicos recientes</strong> (subidas del IPC,
+                cambios normativos) hasta que se incorpore la nueva edición anual.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown("## 🚀 Líneas de trabajo futuro")
-        st.markdown("""
-        **Datos:**
-        - Integración con la BBDD de nóminas para enriquecer automáticamente variables salariales.
-        - Encuesta longitudinal interna: seguimiento año a año para medir evolución individual.
-        - Ampliación de la muestra a otras comunidades autónomas.
+                st.markdown("""
+        <div class="metric-card warning" style="margin-bottom:16px;">
+            <div class="metric-label">
+                <strong>Origen de los datos</strong></div>
+            <div style="margin-top:10px; font-size:0.93rem; color:#374151; line-height:1.7;">
+                El perfil financiero se construye a partir de variables declaradas en encuesta
+                (ingresos, tipo de contrato, situación del hogar). Son indicadores sólidos y contrastados,
+                pero <strong>no sustituyen a datos directos de nómina</strong>.
+            </div>
+        </div>
+        <div class="metric-card danger">
+            <div class="metric-label">
+                <strong>Uso responsable</strong></div>
+            <div style="margin-top:10px; font-size:0.93rem; color:#374151; line-height:1.7;">
+                La herramienta <strong>no reemplaza el juicio profesional</strong> ni una evaluación
+                individualizada. Está diseñada para marcos de apoyo voluntario, con consentimiento
+                expreso del empleado.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        **Modelo:**
-        - Exploración de modelos de series temporales para detectar deterioro progresivo.
-        - Calibración del umbral de riesgo por sector económico.
-        - Análisis de equidad algorítmica (fairness) por género, edad y origen.
+    st.markdown("<br><br>", unsafe_allow_html=True)
 
-        **Producto:**
-        - Módulo de recomendaciones personalizadas para el empleado.
-        - Integración con plataformas de RRHH (SAP SuccessFactors, Workday).
-        - Dashboard en tiempo real para RRHH con alertas automáticas.
-        """)
+
+        # ── Bloque 2: Roadmap ─────────────────────────────────────────────────────
+    st.markdown("##  <i class='ph ph-rocket-launch'></i> Hacia dónde evoluciona", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:#f8fafc; border-radius:14px; padding:28px 32px; margin-bottom:20px;">
+        <div style="font-size:0.76rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Horizonte</div>
+        <div style="font-size:1.05rem; font-weight:600; color:#0f1923; margin-bottom:18px;">⚡ A corto plazo — mejoras que se pueden activar pronto</div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#0ea5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Conexión directa con datos de nómina</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Las variables salariales se actualizarían de forma automática, sin depender de lo que el empleado declara en encuesta.</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#0ea5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Actualización anual automática</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Conexión a la nueva edición de la Encuesta de Condiciones de Vida cada año, para que el análisis se mantenga vigente sin trabajo manual.</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#0ea5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Módulo de recomendaciones para el empleado</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Además de identificar el riesgo, la herramienta sugeriría acciones concretas de apoyo financiero adaptadas al perfil de cada persona.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background:#f8fafc; border-radius:14px; padding:28px 32px;">
+        <div style="font-size:0.76rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Horizonte</div>
+        <div style="font-size:1.05rem; font-weight:600; color:#0f1923; margin-bottom:18px;">🗺️ A medio plazo — visión estratégica de crecimiento</div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Ampliación geográfica progresiva</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Primero, municipios y distritos de Madrid para ofrecer granularidad local. Después, extensión al resto de comunidades autónomas.</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">5</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Seguimiento de la evolución en el tiempo</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Incorporar el IPC y otras variables macroeconómicas para detectar deterioro financiero progresivo, no solo en un momento puntual.</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">6</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Integración con plataformas de RRHH</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Conexión nativa con SAP SuccessFactors o Workday para que la herramienta funcione dentro del flujo existente, sin doble gestión.</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:14px;">
+                <div style="min-width:30px; height:30px; background:#7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.85rem; flex-shrink:0;">7</div>
+                <div>
+                    <div style="font-weight:600; color:#0f1923; font-size:0.93rem;">Panel en tiempo real con alertas automáticas</div>
+                    <div style="color:#475569; font-size:0.87rem; margin-top:3px;">Dashboard para el equipo de RRHH que notifique cuando el perfil de riesgo de un empleado cambia de forma significativa.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+        # Cierre
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="hero-banner" style="padding:28px 32px; margin-bottom:0; text-align:center;">
+        <div style="font-size:1.1rem; font-weight:600; margin-bottom:8px;">Una herramienta que crece con la empresa</div>
+        <p style="max-width:520px; margin:0 auto;">
+            El punto de partida es sólido. El camino está trazado. Cada paso está diseñado para añadir
+            valor sin aumentar la complejidad para el equipo de RRHH.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1495,23 +1746,24 @@ else:
 
         if rol == 'rrhh':
             opciones = [
-                '🏠  Contexto',
-                '👥  Usuarios y Valor',
-                '📊  Análisis EDA',
-                '💰  Presupuesto',
-                '⚠️  Limitaciones y Futuro',
-                '📋  Respuestas Empleados',
+                '⌂  Contexto',
+                '◈  Usuarios y Valor',
+                '▦  Análisis EDA',
+                '◎  Presupuesto',
+                '◬  Limitaciones y Futuro',
+                '▤  Respuestas Empleados',
             ]
         else:
             opciones = [
-                '🏠  Contexto',
-                '📝  Cuestionario',
+                '⌂  Contexto',
+                '▧  Cuestionario',
             ]
+
 
         seccion = st.radio('Navegación', options=opciones, label_visibility='collapsed')
         st.markdown('---')
         if rol == 'rrhh':
-            estado_modelo = '✅ Modelo cargado' if modelo else '⚠️ Modelo no disponible (demo)'
+            estado_modelo = '✓ Modelo cargado' if modelo else '⚠ Modelo no disponible (demo)'
             st.caption(estado_modelo)
         st.caption('TFM · ECV 2025')
 
@@ -1523,17 +1775,17 @@ else:
             st.rerun()
 
     # Routing de secciones
-    if seccion == '🏠  Contexto':
+    if seccion == '⌂  Contexto':
         seccion_contexto()
-    elif seccion == '👥  Usuarios y Valor':
+    elif seccion == '◈  Usuarios y Valor':
         seccion_usuarios_valor()
-    elif seccion == '📊  Análisis EDA':
+    elif seccion == '▦  Análisis EDA':
         seccion_eda()
-    elif seccion == '💰  Presupuesto':
+    elif seccion == '◎  Presupuesto':
         seccion_presupuesto()
-    elif seccion == '⚠️  Limitaciones y Futuro':
+    elif seccion == '◬  Limitaciones y Futuro':
         seccion_limitaciones()
-    elif seccion == '📋  Respuestas Empleados':
+    elif seccion == '▤  Respuestas Empleados':
         seccion_respuestas_rrhh()
-    elif seccion == '📝  Cuestionario':
+    elif seccion == '▧  Cuestionario':
         seccion_cuestionario_empleado()
