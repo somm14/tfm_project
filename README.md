@@ -196,6 +196,16 @@ Preprocesado encapsulado en un `ColumnTransformer` con fit exclusivo sobre train
 
 ## 6. Modelado
 
+### Elección y justificación de las métricas
+
+El problema presenta un **desbalanceo estructural 1:5** (16% de casos positivos), lo que hace que la accuracy sea una métrica engañosa: un clasificador trivial que siempre predice "sin estrés" alcanzaría ~84% de accuracy sin aprender nada.
+
+Por este motivo se establecieron dos métricas complementarias:
+- **ROC-AUC**: métrica de ranking que mide la capacidad del modelo para separar las dos clases a través de todos los umbrales posibles. Es insensible al desbalanceo y permite comparar modelos de forma independiente al umbral de decisión elegido.
+- **F1-Score (clase 1)** (métrica primaria): media armónica de precisión y recall sobre la clase "estrés alto". Es la métrica que guía tanto la selección del algoritmo como la optimización de hiperparámetros, por dos razones:
+  - **Asimetría del coste de error**: en un contexto de RRHH, un falso negativo (empleado con estrés financiero alto que el modelo no detecta) es significativamente más costoso que un falso positivo. El F1 penaliza los fallos en ambas direcciones, pero su orientación hacia la clase minoritaria lo hace más sensible al recall.
+  - **Criterio de selección de algoritmo**: en el baseline con validación cruzada (5-fold estratificado), RandomForest obtuvo mejor AUC (0.9529 vs 0.9480 de LightGBM), pero LightGBM fue el mejor en F1 (0.7549 vs 0.6951 de RandomForest). Dado que el F1 es la métrica primaria, LightGBM fue el candidato natural para la optimización fina.
+
 ### Proceso de selección
 
 | Etapa | Modelo | ROC-AUC | F1 (clase 1) |
